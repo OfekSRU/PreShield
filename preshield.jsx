@@ -20,7 +20,8 @@ const GEMINI_API_ROOT = import.meta.env.VITE_GEMINI_API_ROOT || "/api/gemini";
 const CUSTOM_GEMINI_URL = import.meta.env.VITE_GEMINI_GENERATE_URL?.trim();
 
 function geminiEndpointForModel(modelId) {
-  return `${GEMINI_API_ROOT}/v1beta/models/${encodeURIComponent(modelId)}:generateContent`;
+  // Use the simpler /api/gemini/generateContent endpoint that accepts model as query param
+  return `${GEMINI_API_ROOT}/generateContent?model=${encodeURIComponent(modelId)}`;
 }
 
 function geminiResponseText(data) {
