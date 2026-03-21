@@ -1,0 +1,31 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "vite: dev",
+      "type": "shell",
+      "command": "\"${env:ProgramFiles}\\nodejs\\npm.cmd\" run dev",
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "shell": {
+          "executable": "C:\\Windows\\System32\\cmd.exe",
+          "args": ["/d", "/c"]
+        },
+        "env": {
+          "Path": "C:\\Program Files\\nodejs;${env:Path}"
+        }
+      },
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "vite",
+        "pattern": { "regexp": ".", "file": 1, "location": 1, "message": 1 },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".",
+          "endsPattern": "Local:\\s+http://localhost:8080"
+        }
+      },
+      "presentation": { "reveal": "silent", "panel": "shared" }
+    }
+  ]
+}
