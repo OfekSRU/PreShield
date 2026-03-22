@@ -304,11 +304,36 @@ function AuthScreen({ onAuth }) {
   const [language, setLanguage] = useState("EN");
   const [isDarkMode, setIsDarkMode] = useState(true);
 
-  // Restore remembered email
+  // Restore remembered email and preferences
   useEffect(() => {
     const remembered = localStorage.getItem("ps_remembered_email");
     if (remembered) setEmail(remembered);
+    const savedLanguage = localStorage.getItem("ps_language");
+    if (savedLanguage) setLanguage(savedLanguage);
+    const savedTheme = localStorage.getItem("ps_theme");
+    if (savedTheme) setIsDarkMode(savedTheme === "dark");
   }, []);
+
+  const handleLanguageChange = (lang) => {
+    setLanguage(lang);
+    localStorage.setItem("ps_language", lang);
+  };
+
+  const handleThemeToggle = () => {
+    const newTheme = !isDarkMode;
+    setIsDarkMode(newTheme);
+    localStorage.setItem("ps_theme", newTheme ? "dark" : "light");
+  };
+
+  const translations = {
+    EN: { signIn: "Sign in", createAccount: "Create account", resetPassword: "Reset password", email: "Email", password: "Password", show: "Show", hide: "Hide", businessName: "Business name", businessLocation: "Business location", rememberMe: "Remember me", backToSignIn: "← Back to sign in", forgotPassword: "Forgot password?", checkEmail: "Check your email", resetLinkSent: "We sent a reset link to", subtitle: "AI-powered pre-mortem risk assessment", passwordRequirements: "Password doesn't meet requirements.", connectionError: "Connection error. If you're using this inside an iframe, please open it in a new tab to sign in.", accountCreated: "Account created! Please check your email to confirm before signing in." },
+    עב: { signIn: "כניסה", createAccount: "יצירת חשבון", resetPassword: "איפוס סיסמה", email: "דוא״ל", password: "סיסמה", show: "הצג", hide: "הסתר", businessName: "שם העסק", businessLocation: "מיקום העסק", rememberMe: "זכור אותי", backToSignIn: "← חזרה לכניסה", forgotPassword: "שכחת סיסמה?", checkEmail: "בדוק את דוא״לך", resetLinkSent: "שלחנו קישור איפוס ל", subtitle: "הערכת סיכון מראש מופעלת בעזרת AI", passwordRequirements: "הסיסמה אינה עומדת בדרישות.", connectionError: "שגיאת חיבור. אם אתה משתמש בזה בתוך iframe, אנא פתח אותו בכרטיסייה חדשה.", accountCreated: "חשבון נוצר! אנא בדוק את דוא״לך כדי לאשר לפני הכניסה." },
+    ES: { signIn: "Iniciar sesión", createAccount: "Crear cuenta", resetPassword: "Restablecer contraseña", email: "Correo electrónico", password: "Contraseña", show: "Mostrar", hide: "Ocultar", businessName: "Nombre del negocio", businessLocation: "Ubicación del negocio", rememberMe: "Recuérdame", backToSignIn: "← Volver a iniciar sesión", forgotPassword: "¿Olvidaste tu contraseña?", checkEmail: "Revisa tu correo electrónico", resetLinkSent: "Enviamos un enlace de restablecimiento a", subtitle: "Evaluación de riesgos previos a la mortem impulsada por IA", passwordRequirements: "La contraseña no cumple con los requisitos.", connectionError: "Error de conexión. Si está usando esto dentro de un iframe, abra en una pestaña nueva.", accountCreated: "¡Cuenta creada! Revise su correo para confirmar antes de iniciar sesión." },
+    FR: { signIn: "Se connecter", createAccount: "Créer un compte", resetPassword: "Réinitialiser le mot de passe", email: "E-mail", password: "Mot de passe", show: "Afficher", hide: "Masquer", businessName: "Nom de l'entreprise", businessLocation: "Localisation de l'entreprise", rememberMe: "Se souvenir de moi", backToSignIn: "← Retour à la connexion", forgotPassword: "Mot de passe oublié?", checkEmail: "Vérifiez votre e-mail", resetLinkSent: "Nous avons envoyé un lien de réinitialisation à", subtitle: "Évaluation des risques pré-mortem alimentée par l'IA", passwordRequirements: "Le mot de passe ne répond pas aux exigences.", connectionError: "Erreur de connexion. Si vous utilisez ceci dans une iframe, veuillez l'ouvrir dans un nouvel onglet.", accountCreated: "Compte créé! Veuillez vérifier votre e-mail pour confirmer avant de vous connecter." },
+    DE: { signIn: "Anmelden", createAccount: "Konto erstellen", resetPassword: "Passwort zurücksetzen", email: "E-Mail", password: "Passwort", show: "Anzeigen", hide: "Verbergen", businessName: "Geschäftsname", businessLocation: "Geschäftsstandort", rememberMe: "Mich merken", backToSignIn: "← Zurück zur Anmeldung", forgotPassword: "Passwort vergessen?", checkEmail: "Überprüfen Sie Ihre E-Mail", resetLinkSent: "Wir haben einen Zurücksetzen-Link an gesendet", subtitle: "KI-gestützte Vor-Mortem-Risikobewertung", passwordRequirements: "Das Passwort erfüllt die Anforderungen nicht.", connectionError: "Verbindungsfehler. Wenn Sie dies in einem iframe verwenden, öffnen Sie es bitte in einem neuen Tab.", accountCreated: "Konto erstellt! Bitte überprüfen Sie Ihre E-Mail, um sich anzumelden." },
+  };
+
+  const t = translations[language] || translations.EN;
 
   const checks = validatePassword(password);
   const passwordValid = checks.length && checks.number && checks.upper;
@@ -376,7 +401,12 @@ function AuthScreen({ onAuth }) {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0A0A0F", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, fontFamily: "'DM Sans', 'Helvetica Neue', sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: isDarkMode ? "#0A0A0F" : "#F5F5F5", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, fontFamily: "'DM Sans', 'Helvetica Neue', sans-serif", position: "relative" }}>
+      {/* Language and Theme Controls */}
+      <div style={{ position: "absolute", top: 20, right: 20, display: "flex", gap: 12, alignItems: "center" }}>
+        <button onClick={handleThemeToggle} style={{ background: isDarkMode ? "#2A2A3A" : "#E0E0E0", border: "1px solid " + (isDarkMode ? "#3A3A4A" : "#D0D0D0"), color: isDarkMode ? "#E8E6E0" : "#333", borderRadius: 6, padding: "6px 10px", fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }} title="Toggle dark/light mode">{isDarkMode ? "🌙" : "☀️"}</button>
+        <select value={language} onChange={(e) => handleLanguageChange(e.target.value)} style={{ background: isDarkMode ? "#2A2A3A" : "#E0E0E0", border: "1px solid " + (isDarkMode ? "#3A3A4A" : "#D0D0D0"), color: isDarkMode ? "#E8E6E0" : "#333", borderRadius: 6, padding: "6px 8px", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}><option value="EN">EN</option><option value="עב">עב</option><option value="ES">ES</option><option value="FR">FR</option><option value="DE">DE</option></select>
+      </div>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap'); * { box-sizing: border-box; margin: 0; padding: 0; } input[type="email"], input[type="password"], input[type="text"] { background: #13131A; border: 1px solid #2A2A3A; color: #E8E6E0; border-radius: 8px; padding: 11px 14px; font-family: inherit; font-size: 14px; outline: none; width: 100%; transition: border-color 0.2s; } input:focus { border-color: #5B5BFF; } button { cursor: pointer; font-family: inherit; border: none; transition: all 0.15s; } .check-box { width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid #2A2A3A; background: #13131A; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; } .check-box.checked { background: #5B5BFF; border-color: #5B5BFF; }`}</style>
 
       <div style={{ width: "100%", maxWidth: 400 }}>
