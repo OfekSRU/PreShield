@@ -3092,7 +3092,16 @@ function RisksView({ t, project, onUpdate, colorMode }) {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
       } else if (format === 'ppt') {
-        alert('PowerPoint export: Please use the "Export PDF" option and then "Save as PowerPoint" in your PDF viewer, or use the main project export for a full slide deck.');
+        const pptHtml = buildPPTXHtml({ ...project, risks: [riskMitigationChat] }, t);
+        const blob = new Blob([pptHtml], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Risk-Presentation-${riskMitigationChat.title.replace(/\s+/g, '-')}-${Date.now()}.html`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
       }
     } catch (e) {
       console.error('Export failed:', e);
