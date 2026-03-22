@@ -365,6 +365,8 @@ function AuthScreen({ onAuth }) {
         setPassword("");
         setBusinessName("");
         setBusinessLocation("");
+        setShowPassword(false);
+        setRememberMe(false);
         if (data?.access_token) {
           if (rememberMe) {
             localStorage.setItem("ps_remembered_email", email.trim());
@@ -415,8 +417,8 @@ function AuthScreen({ onAuth }) {
           <div style={{ width: 48, height: 48, background: "#5B5BFF", borderRadius: 12, display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
             <svg width="24" height="24" viewBox="0 0 14 14" fill="none"><path d="M7 1L13 4V7C13 10.3 10.3 13 7 13C3.7 13 1 10.3 1 7V4L7 1Z" stroke="#fff" strokeWidth="1.5" fill="none"/><path d="M4.5 7L6.5 9L9.5 5.5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </div>
-          <div style={{ fontSize: 22, fontWeight: 700, color: "#E8E6E0", letterSpacing: "-0.5px" }}>PreShield</div>
-          <div style={{ fontSize: 13, color: "#9A9898", marginTop: 4 }}>AI-powered pre-mortem risk assessment</div>
+          <div style={{ fontSize: 22, fontWeight: 700, color: isDarkMode ? "#E8E6E0" : "#1A1A1A", letterSpacing: "-0.5px" }}>PreShield</div>
+          <div style={{ fontSize: 13, color: isDarkMode ? "#9A9898" : "#666666", marginTop: 4 }}>AI-powered pre-mortem risk assessment</div>
         </div>
 
         {/* Card */}
