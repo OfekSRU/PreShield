@@ -3755,7 +3755,7 @@ function RisksView({ t, project, onUpdate, colorMode }) {
                 <h4 style={{ fontSize: 14, fontWeight: 700, color: "var(--ps-text)", marginBottom: 12 }}>Mitigation Roadmap</h4>
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {roadmapSteps.map((step, idx) => (
-                    <div key={step.id} style={{ padding: 12, background: "var(--ps-card-bg)", borderRadius: 8, border: `2px solid ${step.completed ? "#4CAF50" : "var(--ps-border-subtle)"}", cursor: "pointer", transition: "all 0.2s" }} onClick={() => completeRoadmapStep(step.id)}>
+                    <div key={step.id} style={{ padding: 12, background: "var(--ps-card-bg)", borderRadius: 8, border: "2px solid " + (step.completed ? "#4CAF50" : "var(--ps-border-subtle)"), cursor: "pointer", transition: "all 0.2s" }} onClick={() => completeRoadmapStep(step.id)}>
                       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                         <input type="checkbox" checked={step.completed} onChange={() => completeRoadmapStep(step.id)} style={{ cursor: "pointer" }} />
                         <div style={{ flex: 1 }}>
@@ -3770,7 +3770,7 @@ function RisksView({ t, project, onUpdate, colorMode }) {
                 <div style={{ marginTop: 12, padding: 12, background: "var(--ps-panel)", borderRadius: 8, fontSize: 12 }}>
                   <div style={{ color: "var(--ps-text-muted)", marginBottom: 4 }}>Progress</div>
                   <div style={{ height: 6, background: "var(--ps-border-subtle)", borderRadius: 3, overflow: "hidden" }}>
-                    <div style={{ height: "100%", background: "#4CAF50", width: `${(roadmapSteps.filter(s => s.completed).length / roadmapSteps.length) * 100}%`, transition: "width 0.3s" }}></div>
+                    <div style={{ height: "100%", background: "#4CAF50", width: (roadmapSteps.filter(s => s.completed).length / roadmapSteps.length) * 100 + "%", transition: "width 0.3s" }}></div>
                   </div>
                 </div>
               </div>
@@ -3914,7 +3914,7 @@ function MatrixView({ t, project, colorMode }) {
         </div>
 
         <div className="matrix-wrap" style={{ position: "relative", width: "100%", maxWidth: 820 }}>
-          <svg width="100%" viewBox={`0 0 ${PLOT_W} ${PLOT_H}`} style={{ display: "block" }} preserveAspectRatio="xMidYMid meet">
+          <svg width="100%" viewBox={"0 0 " + PLOT_W + " " + PLOT_H} style={{ display: "block" }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <filter id="psMatrixDotShadow" x="-50%" y="-50%" width="200%" height="200%">
                 <feDropShadow dx="0" dy="1.5" stdDeviation="2" floodOpacity="0.2" />
@@ -3926,11 +3926,11 @@ function MatrixView({ t, project, colorMode }) {
 
             <text x={PAD_LEFT + innerW / 2} y={22} textAnchor="middle" fontSize="12" fontWeight="600" fill="var(--ps-text)">{t.impactAxisShort}</text>
             {[1, 2, 3, 4, 5].map((v) => (
-              <text key={`itop-${v}`} x={toX(v)} y={PAD_TOP - 10} textAnchor="middle" fontSize="11" fill={axisTick}>{v}</text>
+              <text key={"itop-" + v} x={toX(v)} y={PAD_TOP - 10} textAnchor="middle" fontSize="11" fill={axisTick}>{v}</text>
             ))}
-            <text x={18} y={PAD_TOP + innerH / 2} textAnchor="middle" fontSize="11" fill={axisTick} transform={`rotate(-90, 18, ${PAD_TOP + innerH / 2})`}>{t.likelihood}</text>
+            <text x={18} y={PAD_TOP + innerH / 2} textAnchor="middle" fontSize="11" fill={axisTick} transform={"rotate(-90, 18, " + (PAD_TOP + innerH / 2) + ")"} >{t.likelihood}</text>
             {[1, 2, 3, 4, 5].map((v) => (
-              <text key={`ileft-${v}`} x={PAD_LEFT - 12} y={toY(v) + 4} textAnchor="end" fontSize="11" fill={axisTick}>{v}</text>
+              <text key={"ileft-" + v} x={PAD_LEFT - 12} y={toY(v) + 4} textAnchor="end" fontSize="11" fill={axisTick}>{v}</text>
             ))}
 
             {[1, 2, 3, 4, 5].map((L) =>
@@ -3939,7 +3939,7 @@ function MatrixView({ t, project, colorMode }) {
                 const y0 = PAD_TOP + (5 - L) * cellH;
                 return (
                   <rect
-                    key={`c${L}-${I}`}
+                    key={"c" + L + "-" + I}
                     x={x0 + cellInset}
                     y={y0 + cellInset}
                     width={cellW - 2 * cellInset}
@@ -3983,7 +3983,7 @@ function MatrixView({ t, project, colorMode }) {
           </svg>
 
           {tooltip && (
-            <div style={{ position: "absolute", left: `clamp(10px, ${(tooltip.cx / PLOT_W) * 100}%, calc(100% - 200px))`, top: `clamp(10px, calc(${(tooltip.cy / PLOT_H) * 100}% - 88px), calc(100% - 88px))`, background: "var(--ps-card-bg)", border: `1px solid ${getRiskColor(tooltip.r.risk_score)}66`, borderRadius: 10, padding: "10px 14px", fontSize: 12, maxWidth: 220, zIndex: 10, pointerEvents: "none", boxShadow: "0 6px 24px rgba(0,0,0,.12)" }}>
+            <div style={{ position: "absolute", left: "clamp(10px, " + ((tooltip.cx / PLOT_W) * 100) + "%, calc(100% - 200px))", top: "clamp(10px, calc(" + ((tooltip.cy / PLOT_H) * 100) + "% - 88px), calc(100% - 88px))", background: "var(--ps-card-bg)", border: "1px solid " + getRiskColor(tooltip.r.risk_score) + "66", borderRadius: 10, padding: "10px 14px", fontSize: 12, maxWidth: 220, zIndex: 10, pointerEvents: "none", boxShadow: "0 6px 24px rgba(0,0,0,.12)" }}>
               <div style={{ fontWeight: 600, color: "var(--ps-text)", marginBottom: 4 }}>#{tooltip.num} {tooltip.r.title}</div>
               <div style={{ color: "var(--ps-text-muted)", fontSize: 11, marginBottom: 2 }}>{t.likelihood}: <span style={{ color: "var(--ps-text)" }}>{parseFloat(tooltip.r.likelihood).toFixed(1)}</span> · {t.impact}: <span style={{ color: "var(--ps-text)" }}>{parseFloat(tooltip.r.impact).toFixed(1)}</span></div>
               <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 12, color: getRiskColor(tooltip.r.risk_score), fontWeight: 600 }}>{t.rank || t.score}: {riskRank100(tooltip.r.risk_score)}</div>
@@ -4002,7 +4002,7 @@ function MatrixView({ t, project, colorMode }) {
               </div>
               <div style={{ fontSize: 12, color: "var(--ps-quote-text)", minWidth: 0, flex: "0 1 240px", maxWidth: 380, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.title}</div>
               <div style={{ flex: 1, height: 8, background: "var(--ps-matrix-track)", borderRadius: 4, overflow: "hidden" }}>
-                <div style={{ width: `${riskRank100(r.risk_score)}%`, height: "100%", background: getRiskColor(r.risk_score), borderRadius: 4, transition: "width 0.6s ease" }} />
+                <div style={{ width: riskRank100(r.risk_score) + "%", height: "100%", background: getRiskColor(r.risk_score), borderRadius: 4, transition: "width 0.6s ease" }} />
               </div>
               <div style={{ fontSize: 12, fontFamily: "'DM Mono', monospace", color: getRiskColor(r.risk_score), width: 40, textAlign: "right", flexShrink: 0 }}>{riskRank100(r.risk_score)}</div>
             </div>
