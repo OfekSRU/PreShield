@@ -3000,10 +3000,11 @@ function RisksView({ t, project, onUpdate, colorMode }) {
     setRiskChatLoading(true);
     try {
       const systemPrompt = `You are an expert risk mitigation specialist helping to refine the mitigation plan for this risk: ${riskMitigationChat.title}. Continue the conversation and help develop practical, actionable mitigation strategies. Keep responses focused on this specific risk.`;
-      const body = buildGeminiRequestBody(systemPrompt, newMessages.map(m => ({
-        role: m.role === "user" ? "user" : "model",
+      const thread = newMessages.map(m => ({
+        role: m.role === "user" ? "user" : "ai",
         content: m.content
-      })));
+      }));
+      const body = buildGeminiRequestBody(systemPrompt, thread);
       const { res, data } = await geminiGenerateWithModels(body);
       if (!res?.ok) throw new Error("Failed to get response");
       const text = geminiResponseText(data);
