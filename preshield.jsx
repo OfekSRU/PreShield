@@ -2756,10 +2756,24 @@ function interviewThreadToGeminiContents(thread) {
 
 function buildGeminiRequestBody(systemPrompt, thread) {
   const contents = interviewThreadToGeminiContents(thread);
-  // If no contents, add a default user message to satisfy Gemini API requirements
-  const finalContents = contents.length > 0 ? contents : [{ role: "user", parts: [{ text: "Hello" }] }];
+  
+  // If no contents, start with the system prompt as a user message
+  if (contents.length === 0) {
+    return {
+      contents: [{ role: "user", parts: [{ text: systemPrompt + "\n\nStart the interview now." }] }],
+      generationConfig: { maxOutputTokens: 2048, temperature: 0.7 },
+    };
+  }
+
+  // Otherwise, prepend the system prompt to the first user message
+  const finalContents = [...contents];
+  if (finalContents[0].role === "user") {
+    finalContents[0].parts[0].text = systemPrompt + "\n\n" + finalContents[0].parts[0].text;
+  } else {
+    finalContents.unshift({ role: "user", parts: [{ text: systemPrompt }] });
+  }
+
   return {
-    systemInstruction: { parts: [{ text: systemPrompt }] },
     contents: finalContents,
     generationConfig: { maxOutputTokens: 2048, temperature: 0.7 },
   };
@@ -2767,8 +2781,7 @@ function buildGeminiRequestBody(systemPrompt, thread) {
 
 function buildGeminiStartBody(systemPrompt) {
   return {
-    systemInstruction: { parts: [{ text: systemPrompt }] },
-    contents: [{ role: "user", parts: [{ text: "Start the interview now." }] }],
+    contents: [{ role: "user", parts: [{ text: systemPrompt + "\n\nStart the interview now." }] }],
     generationConfig: { maxOutputTokens: 2048, temperature: 0.7 },
   };
 }
