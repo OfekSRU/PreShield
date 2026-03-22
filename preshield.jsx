@@ -2954,6 +2954,9 @@ function RisksView({ t, project, onUpdate, colorMode }) {
   const [commentInputs, setCommentInputs] = useState({});
   const [expandedRisk, setExpandedRisk] = useState(null);
   const [editDraft, setEditDraft] = useState(null);
+  const [riskMitigationChat, setRiskMitigationChat] = useState(null);
+  const [riskChatMessages, setRiskChatMessages] = useState([]);
+  const [riskChatLoading, setRiskChatLoading] = useState(false);
   const sortedRisks = [...risks].sort((a, b) => b.risk_score - a.risk_score);
   const mitBlue = colorMode === "light" ? "#2563EB" : "#60A5FA";
 
@@ -2970,6 +2973,55 @@ function RisksView({ t, project, onUpdate, colorMode }) {
     onUpdate({ ...project, risks: updatedRisks, risk_count: updatedRisks.length, overall_risk_score: overallScore });
     setExpandedRisk(e => (e === id ? null : e));
     setEditDraft(d => (d?.id === id ? null : d));
+  };
+
+  const startRiskMitigationChat = async (risk) => {
+    setRiskMitigationChat(risk);
+    setRiskChatMessages([]);
+    setRiskChatLoading(true);
+    try {
+      const systemPrompt = `You are a risk mitigation expert. Help develop a detailed mitigation plan for this risk:\n\nRisk: ${risk.title}\nDescription: ${risk.description}\nLikelihood: ${risk.likelihood}/5, Impact: ${risk.impact}/5\nCurrent Plan: ${risk.mitigation}\n\nAsk clarifying questions and help create an actionable mitigation strategy. After the conversation, suggest updated values for likelihood, impact, and mitigation steps.`;
+      const { res, data } = await geminiGenerateWithModels({
+        contents: [{ parts: [{ text: systemPrompt }] }]
+      });
+      if (!res?.ok) throw new Error("Failed to start chat");
+      const text = geminiResponseText(data);
+      setRiskChatMessages([{ role: "ai", content: text }]);
+    } catch (e) {
+      setRiskChatMessages([{ role: "ai", content: "Error starting mitigation chat. Please try again." }]);
+    } finally {
+      setRiskChatLoading(false);
+    }
+  };
+
+  const sendRiskChatMessage = async (userMessage) => {
+    if (!riskMitigationChat || !userMessage.trim()) return;
+    const newMessages = [...riskChatMessages, { role: "user", content: userMessage }];
+    setRiskChatMessages(newMessages);
+    setRiskChatLoading(true);
+    try {
+      const systemPrompt = `You are helping mitigate this risk: ${riskMitigationChat.title}. Continue the conversation and help refine the mitigation plan.`;
+      const contents = [{ parts: [{ text: systemPrompt }] }];
+      for (const msg of newMessages) {
+        contents.push({
+          parts: [{ text: msg.content }],
+          role: msg.role === "user" ? "user" : "model"
+        });
+      }
+      const { res, data } = await geminiGenerateWithModels({ contents });
+      if (!res?.ok) throw new Error("Failed to get response");
+      const text = geminiResponseText(data);
+      setRiskChatMessages([...newMessages, { role: "ai", content: text }]);
+    } catch (e) {
+      setRiskChatMessages([...newMessages, { role: "ai", content: "Error: Could not process your message." }]);
+    } finally {
+      setRiskChatLoading(false);
+    }
+  };
+
+  const closeRiskMitigationChat = () => {
+    setRiskMitigationChat(null);
+    setRiskChatMessages([]);
   };
 
   const toggleRiskEdit = (risk, e) => {
@@ -3069,37 +3121,20 @@ function RisksView({ t, project, onUpdate, colorMode }) {
                 <div style={{ display: "flex", alignItems: "center", gap: 6, paddingTop: 2 }}>
                   <button
                     type="button"
-                    className="btn-ghost"
-                    title={t.editRisk || "Edit"}
-                    aria-label={t.editRisk || "Edit"}
+                    className="btn-primary"
+                    title="Detailed Report"
+                    aria-label="Detailed Report"
                     style={{
                       padding: "8px 12px",
-                      minWidth: 44,
-                      fontSize: 14,
-                      background: expandedRisk === risk.id ? "#5B5BFF22" : "transparent",
-                      borderColor: expandedRisk === risk.id ? "#5B5BFF44" : undefined,
-                      color: expandedRisk === risk.id ? "#5B5BFF" : "var(--ps-text-muted)",
+                      fontSize: 13,
+                      background: "#5B5BFF",
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: 6,
                     }}
-                    onClick={(e) => toggleRiskEdit(risk, e)}
+                    onClick={(e) => { e.stopPropagation(); startRiskMitigationChat(risk); }}
                   >
-                    ✎
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-ghost"
-                    title={t.delete}
-                    aria-label={t.delete}
-                    style={{
-                      padding: "8px 12px",
-                      minWidth: 44,
-                      fontSize: 14,
-                      background: "transparent",
-                      borderColor: "#E5393533",
-                      color: "#E53935",
-                    }}
-                    onClick={(e) => { e.stopPropagation(); deleteRisk(risk.id); }}
-                  >
-                    🗑
+                    📋 {t.detailedReport || "Detailed Report"}
                   </button>
                 </div>
               </div>
@@ -3360,6 +3395,60 @@ function MatrixView({ t, project, colorMode }) {
           ))}
         </div>
       </div>
+
+      {riskMitigationChat && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
+          <div className="card fade-in" style={{ padding: 24, maxWidth: 600, width: "90%", margin: 16, maxHeight: "80vh", display: "flex", flexDirection: "column" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+              <div style={{ fontWeight: 700, fontSize: 16 }}>📋 Risk Mitigation</div>
+              <button type="button" className="btn-ghost" onClick={closeRiskMitigationChat} style={{ padding: "4px 8px" }}>✕</button>
+            </div>
+            <div style={{ fontSize: 13, color: "var(--ps-text-muted)", marginBottom: 12 }}><strong>{riskMitigationChat.title}</strong></div>
+            <div style={{ flex: 1, overflowY: "auto", marginBottom: 16, display: "flex", flexDirection: "column", gap: 12, padding: "8px 0" }}>
+              {riskChatMessages.map((msg, i) => (
+                <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
+                  <div style={{
+                    maxWidth: "80%",
+                    padding: "12px 16px",
+                    borderRadius: msg.role === "user" ? "12px 12px 2px 12px" : "12px 12px 12px 2px",
+                    background: msg.role === "user" ? "#5B5BFF" : "var(--ps-chat-ai-bg)",
+                    border: msg.role === "ai" ? "1px solid var(--ps-border-subtle)" : "none",
+                    fontSize: 13,
+                    lineHeight: 1.6,
+                    color: msg.role === "user" ? "#fff" : "var(--ps-text)",
+                    whiteSpace: "pre-wrap",
+                    wordBreak: "break-word"
+                  }}>
+                    {msg.content}
+                  </div>
+                </div>
+              ))}
+              {riskChatLoading && <div style={{ fontSize: 12, color: "var(--ps-text-muted)", fontStyle: "italic" }}>Thinking...</div>}
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <input
+                type="text"
+                placeholder="Type your response..."
+                onKeyDown={e => {
+                  if (e.key === "Enter" && !riskChatLoading) {
+                    sendRiskChatMessage(e.target.value);
+                    e.target.value = "";
+                  }
+                }}
+                style={{ flex: 1 }}
+                disabled={riskChatLoading}
+              />
+              <button className="btn-primary" onClick={e => {
+                const input = e.target.parentElement.querySelector("input");
+                sendRiskChatMessage(input.value);
+                input.value = "";
+              }} disabled={riskChatLoading}>
+                Send
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
