@@ -2526,26 +2526,56 @@ function buildReportHTML(project, t, forPrint = false) {
 
   <div class="matrix-container">
     <div style="font-size:13px; font-weight:700; margin-bottom:12px; text-align:center; text-transform:uppercase; letter-spacing:1px; color:#888;">Risk Matrix</div>
-    <div class="matrix-grid">
-      ${[5, 4, 3, 2, 1].map(L => `
-        <div class="matrix-label">${L}</div>
-        ${[1, 2, 3, 4, 5].map(I => {
-          const cellRisks = risks.filter(r => Math.round(r.likelihood) === L && Math.round(r.impact) === I);
+    <svg viewBox="0 0 720 480" style="width:100%; max-width:600px; margin:0 auto; display:block;">
+      <defs>
+        <filter id="matrixShadow" x="-50%" y="-50%" width="200%" height="200%">
+          <feDropShadow dx="0" dy="1.5" stdDeviation="2" floodOpacity="0.2" />
+        </filter>
+        <clipPath id="matrixClip">
+          <rect x="52" y="58" width="628" height="378" rx="12" ry="12" />
+        </clipPath>
+      </defs>
+      
+      <!-- Grid cells -->
+      ${[1, 2, 3, 4, 5].map(L => {
+        return [1, 2, 3, 4, 5].map(I => {
+          const x0 = 52 + (I - 1) * 125.6;
+          const y0 = 58 + (5 - L) * 75.6;
           const p = (I * L) / 25;
           const bg = p < 0.12 ? "#E8F5E9" : p < 0.28 ? "#FFE9B5" : p < 0.5 ? "#FFE0B2" : "#FFEBEE";
-          return `<div class="matrix-cell" style="background:${bg}">
-            ${cellRisks.length > 0 ? `<div class="matrix-dot" title="${cellRisks.length} risks"></div>` : ""}
-          </div>`;
+          return `<rect x="${x0 + 1.5}" y="${y0 + 1.5}" width="122.6" height="72.6" rx="10" ry="10" fill="${bg}" stroke="rgba(0,0,0,0.07)" stroke-width="1" />`;
+        }).join("");
+      }).join("")}
+      
+      <!-- Outer border -->
+      <rect x="52" y="58" width="628" height="378" fill="none" stroke="#ddd" stroke-width="1.2" rx="12" />
+      
+      <!-- Axis labels -->
+      <text x="366" y="22" text-anchor="middle" font-size="12" font-weight="600" fill="#333">Impact</text>
+      ${[1, 2, 3, 4, 5].map(v => `<text x="${52 + (v - 1) * 125.6 + 62.8}" y="48" text-anchor="middle" font-size="11" fill="#999">${v}</text>`).join("")}
+      <text x="18" y="247" text-anchor="middle" font-size="11" fill="#999" transform="rotate(-90 18 247)">Likelihood</text>
+      ${[1, 2, 3, 4, 5].map(v => `<text x="40" y="${58 + (5 - v) * 75.6 + 37.8 + 4}" text-anchor="end" font-size="11" fill="#999">${v}</text>`).join("")}
+      
+      <!-- Risk dots -->
+      <g clip-path="url(#matrixClip)">
+        ${sorted.map((r, idx) => {
+          const impact = Math.round(r.impact ?? 3);
+          const likelihood = Math.round(r.likelihood ?? 3);
+          const cx = 52 + (impact - 1) * 125.6 + 62.8;
+          const cy = 58 + (5 - likelihood) * 75.6 + 37.8;
+          const color = riskColor(r.risk_score);
+          const textColor = color === "#EF9F27" ? "#333" : "#fff";
+          const num = idx + 1;
+          const rating = Math.round(((Math.min(25, Math.max(1, r.risk_score)) - 1) / 24) * 99 + 1);
+          return `
+            <circle cx="${cx}" cy="${cy}" r="17" fill="${color}" filter="url(#matrixShadow)" />
+            <text x="${cx}" y="${cy - 3}" text-anchor="middle" font-size="9" font-weight="800" fill="${textColor}">#${num}</text>
+            <text x="${cx}" y="${cy + 8}" text-anchor="middle" font-size="8" font-weight="700" fill="${textColor}" opacity="0.95">${rating}</text>
+          `;
         }).join("")}
-      `).join("")}
-      <div></div>
-      ${[1, 2, 3, 4, 5].map(I => `<div class="matrix-label">${I}</div>`).join("")}
-    </div>
-    <div style="display:flex; justify-content:space-between; margin-top:4px; font-size:10px; color:#aaa; font-weight:700; text-transform:uppercase; letter-spacing:1px;">
-      <div style="margin-left:30px">Impact →</div>
-      <div style="transform:rotate(-90deg) translateY(-280px); width:0; white-space:nowrap;">Likelihood →</div>
-    </div>
-    <div class="matrix-legend">
+      </g>
+    </svg>
+    <div class="matrix-legend" style="margin-top:16px;">
       <div class="legend-item"><div class="legend-color" style="background:#1D9E75"></div>Low</div>
       <div class="legend-item"><div class="legend-color" style="background:#EF9F27"></div>Medium</div>
       <div class="legend-item"><div class="legend-color" style="background:#F57C00"></div>High</div>
