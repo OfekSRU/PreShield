@@ -16,12 +16,12 @@ function parseGeminiModelFallbacks() {
   return [...DEFAULT_GEMINI_MODELS];
 }
 const GEMINI_MODEL_FALLBACKS = parseGeminiModelFallbacks();
-const GEMINI_API_ROOT = import.meta.env.VITE_GEMINI_API_ROOT || "/api/gemini/v1";
+const GEMINI_API_ROOT = import.meta.env.VITE_GEMINI_API_ROOT || "/api/gemini/generateContent";
 const CUSTOM_GEMINI_URL = import.meta.env.VITE_GEMINI_GENERATE_URL?.trim();
 
 function geminiEndpointForModel(modelId) {
-  // Use the v1 path which is more stable and supports newer models
-  return `${GEMINI_API_ROOT}/models/${encodeURIComponent(modelId)}:generateContent`;
+  // Use the direct endpoint with the model as a query parameter
+  return `${GEMINI_API_ROOT}?model=${encodeURIComponent(modelId)}`;
 }
 
 function geminiResponseText(data) {
