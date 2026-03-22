@@ -2977,14 +2977,28 @@ function RisksView({ t, project, onUpdate, colorMode }) {
 
   const startRiskMitigationChat = async (risk) => {
     setRiskMitigationChat(risk);
-    setRiskChatMessages([]);
+    const history = risk.chatHistory || [];
+    setRiskChatMessages(history);
+    
+    // If we already have history, don't trigger initial AI message
+    if (history.length > 0) return;
+
     setRiskChatLoading(true);
     try {
       const systemPrompt = `You are an expert risk mitigation specialist. Your role is to help develop a comprehensive, detailed mitigation plan for this specific risk.\n\nRISK DETAILS:\n- Title: ${risk.title}\n- Description: ${risk.description}\n- Current Likelihood: ${risk.likelihood}/5\n- Current Impact: ${risk.impact}/5\n- Current Mitigation: ${risk.mitigation || "Not yet defined"}\n- Status: ${risk.status || "identified"}\n\nPROVIDE:\n1. 5-7 detailed, actionable mitigation tips specific to this risk\n2. For each tip: implementation steps and expected outcomes\n3. Clarifying questions to understand project context\n4. Refined mitigation strategy through conversation\n5. Realistic updates to likelihood and impact\n6. Specific metrics or KPIs to track effectiveness\n\nFOCUS: Keep conversation ONLY about this specific risk. Provide practical, implementable guidance.`;
-      const { res, data } = await geminiGenerateWithModels(buildGeminiStartBody(systemPrompt));
+      
+      // Fix: Use buildGeminiRequestBody with empty thread instead of buildGeminiStartBody 
+      // to avoid "Start the interview" prompt which might be causing issues or confusion
+      const body = buildGeminiRequestBody(systemPrompt, []);
+      const { res, data } = await geminiGenerateWithModels(body);
+      
       if (!res?.ok) throw new Error("Failed to start chat");
       const text = geminiResponseText(data);
-      setRiskChatMessages([{ role: "ai", content: text }]);
+      const initialMsg = { role: "ai", content: text };
+      setRiskChatMessages([initialMsg]);
+      
+      // Save initial message to risk history
+      updateRisk(risk.id, { chatHistory: [initialMsg] });
     } catch (e) {
       console.error("Risk mitigation chat error:", e);
       setRiskChatMessages([{ role: "ai", content: "Error starting mitigation chat. Please try again." }]);
@@ -3008,10 +3022,16 @@ function RisksView({ t, project, onUpdate, colorMode }) {
       const { res, data } = await geminiGenerateWithModels(body);
       if (!res?.ok) throw new Error("Failed to get response");
       const text = geminiResponseText(data);
-      setRiskChatMessages([...newMessages, { role: "ai", content: text }]);
+      const finalMessages = [...newMessages, { role: "ai", content: text }];
+      setRiskChatMessages(finalMessages);
+      
+      // Save history to project
+      updateRisk(riskMitigationChat.id, { chatHistory: finalMessages });
     } catch (e) {
       console.error("Risk chat message error:", e);
-      setRiskChatMessages([...newMessages, { role: "ai", content: "Error: Could not process your message." }]);
+      const errorMessages = [...newMessages, { role: "ai", content: "Error: Could not process your message." }];
+      setRiskChatMessages(errorMessages);
+      updateRisk(riskMitigationChat.id, { chatHistory: errorMessages });
     } finally {
       setRiskChatLoading(false);
     }
@@ -3041,8 +3061,9 @@ function RisksView({ t, project, onUpdate, colorMode }) {
         projectName: project.name,
       };
 
-      if (format === 'html') {
-        const htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Risk Report - ${reportData.riskTitle}</title><style>body{font-family:Arial,sans-serif;margin:40px;color:#333;line-height:1.6}h1{color:#1f2937;border-bottom:3px solid #5B5BFF;padding-bottom:10px}h2{color:#374151;margin-top:30px;border-left:4px solid #5B5BFF;padding-left:10px}.risk-card{background:#f3f4f6;padding:20px;border-radius:8px;margin:20px 0;border-left:4px solid #5B5BFF}.parameter{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e5e7eb}.parameter-label{font-weight:bold;color:#6b7280;min-width:150px}.parameter-value{color:#1f2937;flex:1;text-align:right}.chat-section{margin:30px 0}.message{margin:15px 0;padding:15px;border-radius:8px}.user-message{background:#dbeafe;text-align:right;border-left:4px solid #3b82f6}.ai-message{background:#f0f9ff;border-left:4px solid #5B5BFF}.footer{margin-top:40px;padding-top:20px;border-top:1px solid #e5e7eb;font-size:12px;color:#6b7280}</style></head><body><h1>Risk Mitigation Report</h1><p><strong>Project:</strong> ${reportData.projectName}</p><p><strong>Generated:</strong> ${new Date(reportData.generatedAt).toLocaleString()}</p><h2>Risk Details</h2><div class="risk-card"><div class="parameter"><span class="parameter-label">Risk Title:</span><span class="parameter-value">${reportData.riskTitle}</span></div><div class="parameter"><span class="parameter-label">Description:</span><span class="parameter-value">${reportData.riskDescription}</span></div><div class="parameter"><span class="parameter-label">Likelihood:</span><span class="parameter-value">${reportData.likelihood}/5</span></div><div class="parameter"><span class="parameter-label">Impact:</span><span class="parameter-value">${reportData.impact}/5</span></div><div class="parameter"><span class="parameter-label">Risk Score:</span><span class="parameter-value">${reportData.riskScore}</span></div><div class="parameter"><span class="parameter-label">Status:</span><span class="parameter-value">${reportData.status}</span></div><div class="parameter"><span class="parameter-label">Owner:</span><span class="parameter-value">${reportData.owner || 'Unassigned'}</span></div></div><h2>Mitigation Plan</h2><div class="risk-card">${reportData.mitigation || '<em>No mitigation plan defined yet</em>'}</div><h2>Mitigation Discussion</h2><div class="chat-section">${reportData.chatHistory.map(msg => `<div class="message ${msg.role === 'user' ? 'user-message' : 'ai-message'}"><strong>${msg.role === 'user' ? 'You' : 'AI Expert'}:</strong><br>${msg.content.replace(/\n/g, '<br>')}</div>`).join('')}</div><div class="footer"><p>This report was generated by PreShield Risk Assessment Platform</p><p>Report Version: ${new Date().toISOString()}</p></div></body></html>`;
+      const htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Risk Report - ${reportData.riskTitle}</title><style>body{font-family:Arial,sans-serif;margin:40px;color:#333;line-height:1.6}h1{color:#1f2937;border-bottom:3px solid #5B5BFF;padding-bottom:10px}h2{color:#374151;margin-top:30px;border-left:4px solid #5B5BFF;padding-left:10px}.risk-card{background:#f3f4f6;padding:20px;border-radius:8px;margin:20px 0;border-left:4px solid #5B5BFF}.parameter{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e5e7eb}.parameter-label{font-weight:bold;color:#6b7280;min-width:150px}.parameter-value{color:#1f2937;flex:1;text-align:right}.chat-section{margin:30px 0}.message{margin:15px 0;padding:15px;border-radius:8px;page-break-inside:avoid}.user-message{background:#dbeafe;text-align:right;border-left:4px solid #3b82f6}.ai-message{background:#f0f9ff;border-left:4px solid #5B5BFF}.footer{margin-top:40px;padding-top:20px;border-top:1px solid #e5e7eb;font-size:12px;color:#6b7280}@media print{.no-print{display:none}}</style></head><body><h1>Risk Mitigation Report</h1><p><strong>Project:</strong> ${reportData.projectName}</p><p><strong>Generated:</strong> ${new Date(reportData.generatedAt).toLocaleString()}</p><h2>Risk Details</h2><div class="risk-card"><div class="parameter"><span class="parameter-label">Risk Title:</span><span class="parameter-value">${reportData.riskTitle}</span></div><div class="parameter"><span class="parameter-label">Description:</span><span class="parameter-value">${reportData.riskDescription}</span></div><div class="parameter"><span class="parameter-label">Likelihood:</span><span class="parameter-value">${reportData.likelihood}/5</span></div><div class="parameter"><span class="parameter-label">Impact:</span><span class="parameter-value">${reportData.impact}/5</span></div><div class="parameter"><span class="parameter-label">Risk Score:</span><span class="parameter-value">${reportData.riskScore}</span></div><div class="parameter"><span class="parameter-label">Status:</span><span class="parameter-value">${reportData.status}</span></div><div class="parameter"><span class="parameter-label">Owner:</span><span class="parameter-value">${reportData.owner || 'Unassigned'}</span></div></div><h2>Mitigation Plan</h2><div class="risk-card">${reportData.mitigation || '<em>No mitigation plan defined yet</em>'}</div><h2>Mitigation Discussion</h2><div class="chat-section">${reportData.chatHistory.map(msg => `<div class="message ${msg.role === 'user' ? 'user-message' : 'ai-message'}"><strong>${msg.role === 'user' ? 'You' : 'AI Expert'}:</strong><br>${msg.content.replace(/\n/g, '<br>')}</div>`).join('')}</div><div class="footer"><p>This report was generated by PreShield Risk Assessment Platform</p><p>Report Version: ${new Date().toISOString()}</p></div></body></html>`;
+
+      if (format === 'html' || format === 'notion') {
         const blob = new Blob([htmlContent], { type: 'text/html' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -3052,16 +3073,26 @@ function RisksView({ t, project, onUpdate, colorMode }) {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-      } else if (format === 'pdf') {
-        alert('PDF export coming soon - please use HTML export for now');
+      } else if (format === 'pdf' || format === 'image') {
+        const win = window.open('', '_blank');
+        win.document.write(htmlContent);
+        win.document.close();
+        setTimeout(() => {
+          win.print();
+        }, 500);
       } else if (format === 'word') {
-        alert('Word export coming soon - please use HTML export for now');
+        const wordHtml = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Export</title></head><body>${htmlContent}</body></html>`;
+        const blob = new Blob([wordHtml], { type: 'application/msword' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Risk-Report-${riskMitigationChat.title.replace(/\s+/g, '-')}-${Date.now()}.doc`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
       } else if (format === 'ppt') {
-        alert('PowerPoint export coming soon - please use HTML export for now');
-      } else if (format === 'notion') {
-        alert('Notion export coming soon - please use HTML export for now');
-      } else if (format === 'image') {
-        alert('Image export coming soon - please use HTML export for now');
+        alert('PowerPoint export: Please use the "Export PDF" option and then "Save as PowerPoint" in your PDF viewer, or use the main project export for a full slide deck.');
       }
     } catch (e) {
       console.error('Export failed:', e);
