@@ -3076,11 +3076,13 @@ function RisksView({ t, project, onUpdate, colorMode }) {
       const { res, data } = await geminiGenerateWithModels(body);
       if (!res?.ok) throw new Error("Failed to get response");
       const text = geminiResponseText(data);
-      const finalMessages = [...newMessages, { role: "ai", content: text }];
+      const aiMsg = { role: "ai", content: text };
+      const finalMessages = [...newMessages, aiMsg];
       setRiskChatMessages(finalMessages);
       
       // Save history to project
-      updateRisk(riskMitigationChat.id, { chatHistory: finalMessages });
+      const updatedRisks = risks.map(r => r.id === riskMitigationChat.id ? { ...r, chatHistory: finalMessages } : r);
+      onUpdate({ ...project, risks: updatedRisks });
     } catch (e) {
       console.error("Risk chat message error:", e);
       const errorMessages = [...newMessages, { role: "ai", content: "Error: Could not process your message." }];
