@@ -3,8 +3,18 @@ import { useState, useEffect, useRef, useMemo } from "react";
 const SUPABASE_URL = "https://uuakospgqfltwahjtaqw.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1YWtvc3BncWZsdHdhaGp0YXF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMzM5MDYsImV4cCI6MjA4OTYwOTkwNn0.S5uU1qiRsbX-nfcE7ZKEEFNKdPc8-NHUoXS0Es9D0gM";
 
-/** All available free Gemini models for automatic rotation when quota is reached. */
-const DEFAULT_GEMINI_MODELS = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-2.0-flash-lite"];
+/** All available free Gemini models for automatic rotation when quota is reached.
+ * These are all the free-tier models available in the Gemini v1beta API.
+ * The app will automatically rotate through these models if one hits quota limits.
+ */
+const DEFAULT_GEMINI_MODELS = [
+  "gemini-1.5-flash",
+  "gemini-2.0-flash",
+  "gemini-2.0-flash-lite",
+  "gemini-1.5-pro",
+  "gemini-1.0-pro",
+  "gemini-pro",
+];
 function parseGeminiModelFallbacks() {
   const multi = import.meta.env.VITE_GEMINI_MODELS?.trim();
   if (multi) {
@@ -49,12 +59,15 @@ function geminiFailureIsRetriable(status, data) {
   const msg = String(data?.error?.message || "").toLowerCase();
   const st = String(data?.error?.status || "").toUpperCase();
   
-  // Check for quota and resource exhaustion errors
+  // Check for quota and resource exhaustion errors (ALWAYS retry)
   if (st === "RESOURCE_EXHAUSTED" || st === "UNAVAILABLE" || st === "DEADLINE_EXCEEDED") return true;
   if (status === 400 && /quota|exhausted|rate limit|billing|too many requests|resource has been exhausted|limit exceeded/.test(msg)) return true;
   
   // Retry on 500+ server errors
   if (status >= 500) return true;
+  
+  // Also retry on 400 errors that might indicate model issues
+  if (status === 400) return true;
   
   return false;
 }
