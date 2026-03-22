@@ -29,7 +29,9 @@ export default async function handler(req, res) {
     const path = req.url.replace(/^\/api\/gemini/, "") || "";
     
     // Build the full Gemini API URL
-    const geminiUrl = `https://generativelanguage.googleapis.com${path}?key=${encodeURIComponent(apiKey)}`;
+    // Fix: Ensure we use v1 instead of v1beta
+    const finalPath = path.replace(/^\/v1beta\//, "/v1/");
+    const geminiUrl = `https://generativelanguage.googleapis.com${finalPath}?key=${encodeURIComponent(apiKey)}`;
 
     // Forward the request to Google's Gemini API
     const response = await fetch(geminiUrl, {
