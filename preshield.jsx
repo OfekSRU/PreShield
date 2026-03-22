@@ -8,13 +8,11 @@ const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
  * The app will automatically rotate through these models if one hits quota limits.
  */
 const DEFAULT_GEMINI_MODELS = [
-  "gemini-3.1-flash",
-  "gemini-3.1-flash-lite",
-  "gemini-3.1-pro",
-  "gemini-3-flash",
-  "gemini-2.5-flash",
-  "gemini-2.5-flash-lite",
-  "gemini-2.5-pro",
+  "gemini-1.5-flash",
+  "gemini-1.5-flash-8b",
+  "gemini-1.5-pro",
+  "gemini-2.0-flash",
+  "gemini-2.0-flash-lite",
 ];
 function parseGeminiModelFallbacks() {
   const multi = import.meta.env.VITE_GEMINI_MODELS?.trim();
