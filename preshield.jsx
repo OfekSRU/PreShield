@@ -10,9 +10,13 @@ const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const DEFAULT_GEMINI_MODELS = [
   "gemini-1.5-flash",
   "gemini-1.5-flash-8b",
+  "gemini-1.5-flash-001",
   "gemini-1.5-pro",
+  "gemini-1.5-pro-latest",
   "gemini-2.0-flash",
   "gemini-2.0-flash-lite",
+  "gemini-2.0-flash-001",
+  "gemini-2.0-flash-lite-001",
 ];
 function parseGeminiModelFallbacks() {
   const multi = import.meta.env.VITE_GEMINI_MODELS?.trim();
