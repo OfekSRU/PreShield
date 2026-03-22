@@ -2459,6 +2459,16 @@ function buildReportHTML(project, t, forPrint = false) {
   const sorted = [...risks].sort((a, b) => b.risk_score - a.risk_score);
   const scoreColor = project.overall_risk_score >= 60 ? "#E24B4A" : project.overall_risk_score >= 30 ? "#EF9F27" : "#1D9E75";
   const riskColor = (s) => s >= 18 ? "#E53935" : s >= 12 ? "#F57C00" : s >= 6 ? "#EF9F27" : "#1D9E75";
+  
+  // Create a map of risks by position for the matrix
+  const risksByPosition = {};
+  risks.forEach((r, idx) => {
+    const L = Math.round(r.likelihood);
+    const I = Math.round(r.impact);
+    const key = `${L}-${I}`;
+    if (!risksByPosition[key]) risksByPosition[key] = [];
+    risksByPosition[key].push({ ...r, index: idx + 1 });
+  });
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>PreShield Report — ${project.name}</title>
 <style>
@@ -2530,11 +2540,14 @@ function buildReportHTML(project, t, forPrint = false) {
       ${[5, 4, 3, 2, 1].map(L => `
         <div class="matrix-label">${L}</div>
         ${[1, 2, 3, 4, 5].map(I => {
-          const cellRisks = risks.filter(r => Math.round(r.likelihood) === L && Math.round(r.impact) === I);
+          const key = `${L}-${I}`;
+          const cellRisks = risksByPosition[key] || [];
           const p = (I * L) / 25;
           const bg = p < 0.12 ? "#E8F5E9" : p < 0.28 ? "#FFE9B5" : p < 0.5 ? "#FFE0B2" : "#FFEBEE";
-          return `<div class="matrix-cell" style="background:${bg}">
-            ${cellRisks.length > 0 ? `<div class="matrix-dot" title="${cellRisks.length} risks"></div>` : ""}
+          return `<div class="matrix-cell" style="background:${bg}; display: flex; align-items: center; justify-content: center; gap: 4px; flex-wrap: wrap;">
+            ${cellRisks.map(r => `
+              <div class="matrix-dot" style="background: ${riskColor(r.risk_score)}; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; color: white; font-size: 9px; font-weight: 700; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" title="${r.title}">${r.index}</div>
+            `).join("")}
           </div>`;
         }).join("")}
       `).join("")}
