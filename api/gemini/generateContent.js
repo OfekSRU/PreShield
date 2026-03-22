@@ -25,8 +25,8 @@ export default async function handler(req, res) {
     // Get the model from query parameters or body
     const model = req.query.model || req.body?.model || "gemini-2.0-flash-lite";
     
-    // Build the full Gemini API URL using v1 API
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
+    // Build the full Gemini API URL using v1beta API
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
 
     console.log(`[Gemini Proxy] Forwarding request to model: ${model}`);
 

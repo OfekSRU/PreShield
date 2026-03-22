@@ -2759,7 +2759,7 @@ function buildGeminiRequestBody(systemPrompt, thread) {
   // If no contents, add a default user message to satisfy Gemini API requirements
   const finalContents = contents.length > 0 ? contents : [{ role: "user", parts: [{ text: "Hello" }] }];
   return {
-    system_instruction: { parts: [{ text: systemPrompt }] },
+    systemInstruction: { parts: [{ text: systemPrompt }] },
     contents: finalContents,
     generationConfig: { maxOutputTokens: 2048, temperature: 0.7 },
   };
@@ -2767,7 +2767,7 @@ function buildGeminiRequestBody(systemPrompt, thread) {
 
 function buildGeminiStartBody(systemPrompt) {
   return {
-    system_instruction: { parts: [{ text: systemPrompt }] },
+    systemInstruction: { parts: [{ text: systemPrompt }] },
     contents: [{ role: "user", parts: [{ text: "Start the interview now." }] }],
     generationConfig: { maxOutputTokens: 2048, temperature: 0.7 },
   };
