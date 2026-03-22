@@ -2929,13 +2929,99 @@ function mergeProjectMessagesByChannel(existing, channel, nextChannelMessages) {
   return [...keep, ...nextChannelMessages];
 }
 
+// ─── Translation helper ──────────────────────────────────────────────────────
+async function translateMessage(text, targetLang) {
+  if (!text || targetLang === "en") return text;
+  
+  const langMap = {
+    "he": "Hebrew",
+    "es": "Spanish",
+    "fr": "French",
+    "de": "German",
+    "en": "English"
+  };
+  
+  const targetLangName = langMap[targetLang] || "English";
+  
+  try {
+    const body = {
+      contents: [{
+        role: "user",
+        parts: [{
+          text: `Translate the following text to ${targetLangName}. Only provide the translation, nothing else. Do not add any explanation or additional text.\n\n${text}`
+        }]
+      }],
+      generationConfig: { maxOutputTokens: 2048, temperature: 0.3 },
+    };
+    
+    const { res, data } = await geminiGenerateWithModels(body);
+    
+    if (res?.ok) {
+      const translated = geminiResponseText(data);
+      return translated.trim() || text;
+    }
+  } catch (e) {
+    console.warn("Translation failed:", e);
+  }
+  
+  return text;
+}
+
 function InterviewView({ t, project, onUpdate, lang }) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [startError, setStartError] = useState(null);
+  const [translatedMessages, setTranslatedMessages] = useState([]);
+  const [translationInProgress, setTranslationInProgress] = useState(false);
   const messagesEndRef = useRef(null);
   const allMessages = project.messages || [];
   const messages = allMessages.filter((m) => (m?.channel || "interview") === "interview");
+  
+  // Translation cache to avoid redundant API calls
+  const translationCacheRef = useRef({});
+  
+  // Translate messages when language changes
+  useEffect(() => {
+    const translateAllMessages = async () => {
+      if (messages.length === 0) {
+        setTranslatedMessages([]);
+        return;
+      }
+      
+      setTranslationInProgress(true);
+      const translated = await Promise.all(
+        messages.map(async (msg) => {
+          // Only translate AI messages, keep user messages as-is
+          if (msg.role === "user") {
+            return msg;
+          }
+          
+          // Check cache first
+          const cacheKey = `${msg.content}-${lang}`;
+          if (translationCacheRef.current[cacheKey]) {
+            return {
+              ...msg,
+              content: translationCacheRef.current[cacheKey]
+            };
+          }
+          
+          // Translate AI message
+          const translatedContent = await translateMessage(msg.content, lang);
+          translationCacheRef.current[cacheKey] = translatedContent;
+          
+          return {
+            ...msg,
+            content: translatedContent
+          };
+        })
+      );
+      
+      setTranslatedMessages(translated);
+      setTranslationInProgress(false);
+    };
+    
+    translateAllMessages();
+  }, [lang, messages]);
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
@@ -3086,7 +3172,7 @@ If this is the first message, introduce yourself briefly and ask your first ques
         {project.status === "completed" && !project.report_generated && <div style={{ fontSize: 12, color: "#1D9E75", marginLeft: "auto", fontWeight: 600 }}>✓ {t.statusCompleted}</div>}
       </div>
       <div style={{ flex: 1, overflowY: "auto", padding: "4px 0", display: "flex", flexDirection: "column", gap: 12 }}>
-        {messages.map((m, i) => (
+        {translatedMessages.map((m, i) => (
           <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}>
             <div style={{
               maxWidth: "72%",
@@ -3103,7 +3189,7 @@ If this is the first message, introduce yourself briefly and ask your first ques
             </div>
           </div>
         ))}
-        {loading && (
+        {(loading || translationInProgress) && (
           <div style={{ display: "flex", justifyContent: "flex-start" }}>
             <div className="card" style={{ padding: "12px 16px", display: "flex", gap: 6, alignItems: "center" }}>
               {[0, 1, 2].map(i => <div key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: "#5B5BFF", animation: `bounce 1s ${i * 0.15}s infinite` }} />)}
