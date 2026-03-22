@@ -2333,6 +2333,14 @@ function buildReportHTML(project, t, forPrint = false) {
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, Helvetica, Arial, sans-serif; color: #111; background: #fff; font-size: 14px; line-height: 1.65; }
   .page { max-width: 780px; margin: 0 auto; padding: ${forPrint ? "20px" : "40px 32px"}; }
+  .matrix-container { margin: 32px 0; border: 1px solid #eee; border-radius: 12px; padding: 20px; background: #fcfcfc; page-break-inside: avoid; }
+  .matrix-grid { display: grid; grid-template-columns: 30px repeat(5, 1fr); grid-template-rows: repeat(5, 1fr) 30px; gap: 4px; aspect-ratio: 4/3; max-width: 600px; margin: 0 auto; }
+  .matrix-cell { border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; position: relative; }
+  .matrix-label { display: flex; align-items: center; justify-content: center; font-size: 11px; color: #888; font-weight: 600; }
+  .matrix-dot { width: 10px; height: 10px; border-radius: 50%; background: #111; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.3); position: absolute; z-index: 10; }
+  .matrix-legend { display: flex; gap: 16px; justify-content: center; margin-top: 16px; font-size: 11px; color: #666; }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-color { width: 10px; height: 10px; border-radius: 50%; }
   .header { border-bottom: 3px solid #111; padding-bottom: 20px; margin-bottom: 28px; }
   .header-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
   .brand { font-size: 12px; font-weight: 600; letter-spacing: 2px; color: #888; text-transform: uppercase; margin-bottom: 6px; }
@@ -2382,6 +2390,35 @@ function buildReportHTML(project, t, forPrint = false) {
       </div>
     </div>
     ${project.description ? `<p style="margin-top:14px;color:#555;font-size:13px;">${project.description}</p>` : ""}
+  </div>
+
+  <div class="matrix-container">
+    <div style="font-size:13px; font-weight:700; margin-bottom:12px; text-align:center; text-transform:uppercase; letter-spacing:1px; color:#888;">Risk Matrix</div>
+    <div class="matrix-grid">
+      ${[5, 4, 3, 2, 1].map(L => `
+        <div class="matrix-label">${L}</div>
+        ${[1, 2, 3, 4, 5].map(I => {
+          const cellRisks = risks.filter(r => Math.round(r.likelihood) === L && Math.round(r.impact) === I);
+          const p = (I * L) / 25;
+          const bg = p < 0.12 ? "#E8F5E9" : p < 0.28 ? "#FFE9B5" : p < 0.5 ? "#FFE0B2" : "#FFEBEE";
+          return `<div class="matrix-cell" style="background:${bg}">
+            ${cellRisks.length > 0 ? `<div class="matrix-dot" title="${cellRisks.length} risks"></div>` : ""}
+          </div>`;
+        }).join("")}
+      `).join("")}
+      <div></div>
+      ${[1, 2, 3, 4, 5].map(I => `<div class="matrix-label">${I}</div>`).join("")}
+    </div>
+    <div style="display:flex; justify-content:space-between; margin-top:4px; font-size:10px; color:#aaa; font-weight:700; text-transform:uppercase; letter-spacing:1px;">
+      <div style="margin-left:30px">Impact →</div>
+      <div style="transform:rotate(-90deg) translateY(-280px); width:0; white-space:nowrap;">Likelihood →</div>
+    </div>
+    <div class="matrix-legend">
+      <div class="legend-item"><div class="legend-color" style="background:#1D9E75"></div>Low</div>
+      <div class="legend-item"><div class="legend-color" style="background:#EF9F27"></div>Medium</div>
+      <div class="legend-item"><div class="legend-color" style="background:#F57C00"></div>High</div>
+      <div class="legend-item"><div class="legend-color" style="background:#E53935"></div>Critical</div>
+    </div>
   </div>
 
   <div class="summary-grid">
@@ -2581,7 +2618,7 @@ function ExportModal({ project, t, onClose }) {
   const formats = [
     { id: "pdf", icon: "📄", label: "PDF", desc: "Opens print dialog — Save as PDF" },
     { id: "word", icon: "📝", label: "Word (.doc)", desc: "Opens in Microsoft Word or Google Docs" },
-    { id: "html", icon: "🌐", label: "HTML / Notion", desc: "Paste into Notion, email, or browser" },
+    { id: "html", icon: "🌐", label: "HTML", desc: "Download as HTML file" },
     { id: "pptx", icon: "📊", label: "Presentation", desc: "16:9 slide deck — open & print to PPTX" },
     { id: "jpeg", icon: "🖼️", label: "JPEG / Image", desc: "Opens report — use browser screenshot" },
   ];
@@ -2694,9 +2731,12 @@ function interviewThreadToGeminiContents(thread) {
 }
 
 function buildGeminiRequestBody(systemPrompt, thread) {
+  const contents = interviewThreadToGeminiContents(thread);
+  // If no contents, add a default user message to satisfy Gemini API requirements
+  const finalContents = contents.length > 0 ? contents : [{ role: "user", parts: [{ text: "Hello" }] }];
   return {
     systemInstruction: { parts: [{ text: systemPrompt }] },
-    contents: interviewThreadToGeminiContents(thread),
+    contents: finalContents,
     generationConfig: { maxOutputTokens: 2048, temperature: 0.7 },
   };
 }
@@ -3063,7 +3103,7 @@ function RisksView({ t, project, onUpdate, colorMode }) {
 
       const htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Risk Report - ${reportData.riskTitle}</title><style>body{font-family:Arial,sans-serif;margin:40px;color:#333;line-height:1.6}h1{color:#1f2937;border-bottom:3px solid #5B5BFF;padding-bottom:10px}h2{color:#374151;margin-top:30px;border-left:4px solid #5B5BFF;padding-left:10px}.risk-card{background:#f3f4f6;padding:20px;border-radius:8px;margin:20px 0;border-left:4px solid #5B5BFF}.parameter{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e5e7eb}.parameter-label{font-weight:bold;color:#6b7280;min-width:150px}.parameter-value{color:#1f2937;flex:1;text-align:right}.chat-section{margin:30px 0}.message{margin:15px 0;padding:15px;border-radius:8px;page-break-inside:avoid}.user-message{background:#dbeafe;text-align:right;border-left:4px solid #3b82f6}.ai-message{background:#f0f9ff;border-left:4px solid #5B5BFF}.footer{margin-top:40px;padding-top:20px;border-top:1px solid #e5e7eb;font-size:12px;color:#6b7280}@media print{.no-print{display:none}}</style></head><body><h1>Risk Mitigation Report</h1><p><strong>Project:</strong> ${reportData.projectName}</p><p><strong>Generated:</strong> ${new Date(reportData.generatedAt).toLocaleString()}</p><h2>Risk Details</h2><div class="risk-card"><div class="parameter"><span class="parameter-label">Risk Title:</span><span class="parameter-value">${reportData.riskTitle}</span></div><div class="parameter"><span class="parameter-label">Description:</span><span class="parameter-value">${reportData.riskDescription}</span></div><div class="parameter"><span class="parameter-label">Likelihood:</span><span class="parameter-value">${reportData.likelihood}/5</span></div><div class="parameter"><span class="parameter-label">Impact:</span><span class="parameter-value">${reportData.impact}/5</span></div><div class="parameter"><span class="parameter-label">Risk Score:</span><span class="parameter-value">${reportData.riskScore}</span></div><div class="parameter"><span class="parameter-label">Status:</span><span class="parameter-value">${reportData.status}</span></div><div class="parameter"><span class="parameter-label">Owner:</span><span class="parameter-value">${reportData.owner || 'Unassigned'}</span></div></div><h2>Mitigation Plan</h2><div class="risk-card">${reportData.mitigation || '<em>No mitigation plan defined yet</em>'}</div><h2>Mitigation Discussion</h2><div class="chat-section">${reportData.chatHistory.map(msg => `<div class="message ${msg.role === 'user' ? 'user-message' : 'ai-message'}"><strong>${msg.role === 'user' ? 'You' : 'AI Expert'}:</strong><br>${msg.content.replace(/\n/g, '<br>')}</div>`).join('')}</div><div class="footer"><p>This report was generated by PreShield Risk Assessment Platform</p><p>Report Version: ${new Date().toISOString()}</p></div></body></html>`;
 
-      if (format === 'html' || format === 'notion') {
+      if (format === 'html') {
         const blob = new Blob([htmlContent], { type: 'text/html' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -3092,16 +3132,15 @@ function RisksView({ t, project, onUpdate, colorMode }) {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
       } else if (format === 'ppt') {
+        // Proper PPTX export using a library would be better, but for now we'll provide a clear instruction
+        // and a better formatted slide deck that users can print to PDF then save as PPTX.
         const pptHtml = buildPPTXHtml({ ...project, risks: [riskMitigationChat] }, t);
-        const blob = new Blob([pptHtml], { type: 'text/html' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `Risk-Presentation-${riskMitigationChat.title.replace(/\s+/g, '-')}-${Date.now()}.html`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        const win = window.open('', '_blank');
+        win.document.write(pptHtml);
+        win.document.close();
+        setTimeout(() => {
+          alert('To get a .pptx file: \n1. Press Cmd+P (Mac) or Ctrl+P (Windows) in the new tab\n2. Save as PDF\n3. Open the PDF and "Save as PowerPoint"');
+        }, 1000);
       }
     } catch (e) {
       console.error('Export failed:', e);
@@ -3353,7 +3392,6 @@ function RisksView({ t, project, onUpdate, colorMode }) {
                 <option value="pdf">PDF</option>
                 <option value="word">Word (.docx)</option>
                 <option value="ppt">PowerPoint</option>
-                <option value="notion">Notion</option>
                 <option value="image">Image (PNG/JPEG)</option>
               </select>
               <button className="btn-ghost" onClick={closeRiskMitigationChat} style={{ fontSize: 12, padding: "8px 12px" }}>
