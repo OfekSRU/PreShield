@@ -4,7 +4,7 @@ const SUPABASE_URL = "https://uuakospgqfltwahjtaqw.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1YWtvc3BncWZsdHdhaGp0YXF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMzM5MDYsImV4cCI6MjA4OTYwOTkwNn0.S5uU1qiRsbX-nfcE7ZKEEFNKdPc8-NHUoXS0Es9D0gM";
 
 /** All available free Gemini models for automatic rotation when quota is reached. */
-const DEFAULT_GEMINI_MODELS = ["gemini-1.5-flash", "gemini-pro", "gemini-1.5-pro"];
+const DEFAULT_GEMINI_MODELS = ["gemini-pro", "gemini-1.5-flash", "gemini-1.5-pro"];
 function parseGeminiModelFallbacks() {
   const multi = import.meta.env.VITE_GEMINI_MODELS?.trim();
   if (multi) {
@@ -2754,13 +2754,14 @@ function interviewThreadToGeminiContents(thread) {
   return result;
 }
 
-function buildGeminiRequestBody(systemPrompt, thread) {
+function buildGeminiRequestBody(systemPrompt, thread, isInterview = true) {
   const contents = interviewThreadToGeminiContents(thread);
   
   // If no contents, start with the system prompt as a user message
   if (contents.length === 0) {
+    const suffix = isInterview ? "\n\nStart the interview now." : "";
     return {
-      contents: [{ role: "user", parts: [{ text: systemPrompt + "\n\nStart the interview now." }] }],
+      contents: [{ role: "user", parts: [{ text: systemPrompt + suffix }] }],
       generationConfig: { maxOutputTokens: 2048, temperature: 0.7 },
     };
   }
@@ -3064,9 +3065,8 @@ function RisksView({ t, project, onUpdate, colorMode }) {
     try {
       const systemPrompt = `You are an expert risk mitigation specialist. Your role is to help develop a comprehensive, detailed mitigation plan for this specific risk.\n\nRISK DETAILS:\n- Title: ${risk.title}\n- Description: ${risk.description}\n- Current Likelihood: ${risk.likelihood}/5\n- Current Impact: ${risk.impact}/5\n- Current Mitigation: ${risk.mitigation || "Not yet defined"}\n- Status: ${risk.status || "identified"}\n\nPROVIDE:\n1. 5-7 detailed, actionable mitigation tips specific to this risk\n2. For each tip: implementation steps and expected outcomes\n3. Clarifying questions to understand project context\n4. Refined mitigation strategy through conversation\n5. Realistic updates to likelihood and impact\n6. Specific metrics or KPIs to track effectiveness\n\nFOCUS: Keep conversation ONLY about this specific risk. Provide practical, implementable guidance.`;
       
-      // Fix: Use buildGeminiRequestBody with empty thread instead of buildGeminiStartBody 
-      // to avoid "Start the interview" prompt which might be causing issues or confusion
-      const body = buildGeminiRequestBody(systemPrompt, []);
+      // Use buildGeminiRequestBody with isInterview=false to avoid interview-specific instructions
+      const body = buildGeminiRequestBody(systemPrompt, [], false);
       const { res, data } = await geminiGenerateWithModels(body);
       
       if (!res?.ok) throw new Error("Failed to start chat");
@@ -3095,7 +3095,7 @@ function RisksView({ t, project, onUpdate, colorMode }) {
         role: m.role === "user" ? "user" : "ai",
         content: m.content
       }));
-      const body = buildGeminiRequestBody(systemPrompt, thread);
+      const body = buildGeminiRequestBody(systemPrompt, thread, false);
       const { res, data } = await geminiGenerateWithModels(body);
       if (!res?.ok) throw new Error("Failed to get response");
       const text = geminiResponseText(data);
