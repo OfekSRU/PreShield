@@ -3396,59 +3396,7 @@ function MatrixView({ t, project, colorMode }) {
         </div>
       </div>
 
-      {riskMitigationChat && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
-          <div className="card fade-in" style={{ padding: 24, maxWidth: 600, width: "90%", margin: 16, maxHeight: "80vh", display: "flex", flexDirection: "column" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-              <div style={{ fontWeight: 700, fontSize: 16 }}>📋 Risk Mitigation</div>
-              <button type="button" className="btn-ghost" onClick={closeRiskMitigationChat} style={{ padding: "4px 8px" }}>✕</button>
-            </div>
-            <div style={{ fontSize: 13, color: "var(--ps-text-muted)", marginBottom: 12 }}><strong>{riskMitigationChat.title}</strong></div>
-            <div style={{ flex: 1, overflowY: "auto", marginBottom: 16, display: "flex", flexDirection: "column", gap: 12, padding: "8px 0" }}>
-              {riskChatMessages.map((msg, i) => (
-                <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
-                  <div style={{
-                    maxWidth: "80%",
-                    padding: "12px 16px",
-                    borderRadius: msg.role === "user" ? "12px 12px 2px 12px" : "12px 12px 12px 2px",
-                    background: msg.role === "user" ? "#5B5BFF" : "var(--ps-chat-ai-bg)",
-                    border: msg.role === "ai" ? "1px solid var(--ps-border-subtle)" : "none",
-                    fontSize: 13,
-                    lineHeight: 1.6,
-                    color: msg.role === "user" ? "#fff" : "var(--ps-text)",
-                    whiteSpace: "pre-wrap",
-                    wordBreak: "break-word"
-                  }}>
-                    {msg.content}
-                  </div>
-                </div>
-              ))}
-              {riskChatLoading && <div style={{ fontSize: 12, color: "var(--ps-text-muted)", fontStyle: "italic" }}>Thinking...</div>}
-            </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <input
-                type="text"
-                placeholder="Type your response..."
-                onKeyDown={e => {
-                  if (e.key === "Enter" && !riskChatLoading) {
-                    sendRiskChatMessage(e.target.value);
-                    e.target.value = "";
-                  }
-                }}
-                style={{ flex: 1 }}
-                disabled={riskChatLoading}
-              />
-              <button className="btn-primary" onClick={e => {
-                const input = e.target.parentElement.querySelector("input");
-                sendRiskChatMessage(input.value);
-                input.value = "";
-              }} disabled={riskChatLoading}>
-                Send
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 }
