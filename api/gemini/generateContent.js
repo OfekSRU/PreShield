@@ -23,13 +23,14 @@ export default async function handler(req, res) {
 
   try {
     // Get the model from query parameters or body
-    const model = req.query.model || req.body?.model || "gemini-pro";
+    // Free-tier models: gemini-1.5-flash, gemini-2.0-flash, gemini-2.0-flash-lite
+    const model = req.query.model || req.body?.model || "gemini-1.5-flash";
     
     // Build the full Gemini API URL using v1beta API
-    // Note: v1beta supports: gemini-pro, gemini-1.5-flash, gemini-1.5-pro
+    // Free-tier models supported: gemini-1.5-flash, gemini-2.0-flash, gemini-2.0-flash-lite
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
 
-    console.log(`[Gemini Proxy] Forwarding request to model: ${model}`);
+    console.log(`[Gemini Proxy] Forwarding request to free-tier model: ${model}`);
 
     // Forward the request to Google's Gemini API
     const response = await fetch(geminiUrl, {
@@ -47,6 +48,7 @@ export default async function handler(req, res) {
     if (!response.ok) {
       console.error(`[Gemini Proxy] API Error (${response.status}):`, JSON.stringify(data, null, 2));
       console.error(`[Gemini Proxy] Request model: ${model}`);
+      console.error(`[Gemini Proxy] Hint: Ensure model is a free-tier model (gemini-1.5-flash, gemini-2.0-flash, gemini-2.0-flash-lite)`);
     }
 
     // Return the response with the same status code

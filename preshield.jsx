@@ -4,7 +4,7 @@ const SUPABASE_URL = "https://uuakospgqfltwahjtaqw.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1YWtvc3BncWZsdHdhaGp0YXF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMzM5MDYsImV4cCI6MjA4OTYwOTkwNn0.S5uU1qiRsbX-nfcE7ZKEEFNKdPc8-NHUoXS0Es9D0gM";
 
 /** All available free Gemini models for automatic rotation when quota is reached. */
-const DEFAULT_GEMINI_MODELS = ["gemini-pro", "gemini-1.5-flash", "gemini-1.5-pro"];
+const DEFAULT_GEMINI_MODELS = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-2.0-flash-lite"];
 function parseGeminiModelFallbacks() {
   const multi = import.meta.env.VITE_GEMINI_MODELS?.trim();
   if (multi) {
