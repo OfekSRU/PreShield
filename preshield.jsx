@@ -420,30 +420,30 @@ function AuthScreen({ onAuth }) {
         </div>
 
         {/* Card */}
-        <div style={{ background: "#13131A", border: "1px solid #1E1E2E", borderRadius: 16, padding: "32px 28px" }}>
-          <div style={{ fontSize: 18, fontWeight: 600, color: "#E8E6E0", marginBottom: 22 }}>
-            {mode === "login" ? "Sign in" : mode === "register" ? "Create account" : "Reset password"}
+        <div style={{ background: isDarkMode ? "#13131A" : "#FFFFFF", border: `1px solid ${isDarkMode ? "#1E1E2E" : "#E0E0E0"}`, borderRadius: 16, padding: "32px 28px", boxShadow: isDarkMode ? "none" : "0 4px 12px rgba(0,0,0,0.08)" }}>
+          <div style={{ fontSize: 18, fontWeight: 600, color: isDarkMode ? "#E8E6E0" : "#1A1A1A", marginBottom: 22 }}>
+            {mode === "login" ? t.signIn : mode === "register" ? t.createAccount : t.resetPassword}
           </div>
 
           {resetSent ? (
             <div style={{ textAlign: "center", padding: "8px 0" }}>
               <div style={{ fontSize: 32, marginBottom: 12 }}>📬</div>
-              <div style={{ fontSize: 14, color: "#E8E6E0", marginBottom: 8 }}>Check your email</div>
-              <div style={{ fontSize: 13, color: "#9A9898", marginBottom: 20 }}>We sent a reset link to {email}</div>
-              <button onClick={() => { setMode("login"); setResetSent(false); }} style={{ fontSize: 13, color: "#5B5BFF", background: "none", border: "none", cursor: "pointer" }}>← Back to sign in</button>
+              <div style={{ fontSize: 14, color: isDarkMode ? "#E8E6E0" : "#1A1A1A", marginBottom: 8 }}>{t.checkEmail}</div>
+              <div style={{ fontSize: 13, color: isDarkMode ? "#9A9898" : "#666666", marginBottom: 20 }}>{t.resetLinkSent} {email}</div>
+              <button onClick={() => { setMode("login"); setResetSent(false); }} style={{ fontSize: 13, color: "#5B5BFF", background: "none", border: "none", cursor: "pointer" }}>{t.backToSignIn}</button>
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               {/* Email */}
               <div>
-                <label style={{ fontSize: 12, color: "#9A9898", marginBottom: 6, display: "block" }}>Email</label>
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@company.com" onKeyDown={e => e.key === "Enter" && submit()} autoFocus />
+                <label style={{ fontSize: 12, color: isDarkMode ? "#9A9898" : "#666666", marginBottom: 6, display: "block" }}>{t.email}</label>
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@company.com" onKeyDown={e => e.key === "Enter" && submit()} autoFocus style={{ background: isDarkMode ? "#13131A" : "#F5F5F5", border: `1px solid ${isDarkMode ? "#2A2A3A" : "#D0D0D0"}`, color: isDarkMode ? "#E8E6E0" : "#1A1A1A" }} />
               </div>
 
               {/* Password */}
               {mode !== "reset" && (
                 <div>
-                  <label style={{ fontSize: 12, color: "#9A9898", marginBottom: 6, display: "block" }}>Password</label>
+                  <label style={{ fontSize: 12, color: isDarkMode ? "#9A9898" : "#666666", marginBottom: 6, display: "block" }}>{t.password}</label>
                   <div style={{ position: "relative" }}>
                     <input
                       type={showPassword ? "text" : "password"}
@@ -451,13 +451,12 @@ function AuthScreen({ onAuth }) {
                       onChange={e => setPassword(e.target.value)}
                       placeholder="••••••••"
                       onKeyDown={e => e.key === "Enter" && submit()}
-                      style={{ paddingRight: 42 }}
+                      style={{ paddingRight: 42, background: isDarkMode ? "#13131A" : "#F5F5F5", border: `1px solid ${isDarkMode ? "#2A2A3A" : "#D0D0D0"}`, color: isDarkMode ? "#E8E6E0" : "#1A1A1A" }}
                     />
                     <button
                       onClick={() => setShowPassword(v => !v)}
-                      style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#9A9898", fontSize: 12, padding: 2, cursor: "pointer" }}
-                    >
-                      {showPassword ? "Hide" : "Show"}
+                      style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: isDarkMode ? "#9A9898" : "#666666", fontSize: 12, padding: 2, cursor: "pointer" }} >
+                      {showPassword ? t.hide : t.show}
                     </button>
                   </div>
                   {/* Password requirements for register */}
@@ -469,7 +468,7 @@ function AuthScreen({ onAuth }) {
               {mode === "register" && (
                 <>
                   <div>
-                    <label style={{ fontSize: 12, color: "#9A9898", marginBottom: 6, display: "block" }}>Business name</label>
+                    <label style={{ fontSize: 12, color: isDarkMode ? "#9A9898" : "#666666", marginBottom: 6, display: "block" }}>{t.businessName}</label>
                     <input
                       type="text"
                       value={businessName}
@@ -480,7 +479,7 @@ function AuthScreen({ onAuth }) {
                     />
                   </div>
                   <div>
-                    <label style={{ fontSize: 12, color: "#9A9898", marginBottom: 6, display: "block" }}>Business location</label>
+                    <label style={{ fontSize: 12, color: isDarkMode ? "#9A9898" : "#666666", marginBottom: 6, display: "block" }}>{t.businessLocation}</label>
                     <input
                       type="text"
                       value={businessLocation}
@@ -496,10 +495,10 @@ function AuthScreen({ onAuth }) {
               {/* Remember me (login only) */}
               {mode === "login" && (
                 <div style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }} onClick={() => setRememberMe(v => !v)}>
-                  <div className={`check-box${rememberMe ? " checked" : ""}`}>
+                  <div className={`check-box${rememberMe ? " checked" : ""}`} style={{ background: isDarkMode ? "#13131A" : "#F5F5F5", border: `1.5px solid ${isDarkMode ? "#2A2A3A" : "#D0D0D0"}` }}>
                     {rememberMe && <span style={{ color: "#fff", fontSize: 10 }}>✓</span>}
                   </div>
-                  <span style={{ fontSize: 13, color: "#9A9898", userSelect: "none" }}>Remember me</span>
+                  <span style={{ fontSize: 13, color: isDarkMode ? "#9A9898" : "#666666", userSelect: "none" }}>{t.rememberMe}</span>
                 </div>
               )}
 
