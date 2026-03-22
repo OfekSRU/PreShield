@@ -23,10 +23,10 @@ export default async function handler(req, res) {
 
   try {
     // Get the model from query parameters or body
-    const model = req.query.model || req.body?.model || "gemini-2.5-flash-lite";
+    const model = req.query.model || req.body?.model || "gemini-2.0-flash-lite";
     
-    // Build the full Gemini API URL
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
+    // Build the full Gemini API URL using v1 API
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
 
     console.log(`[Gemini Proxy] Forwarding request to model: ${model}`);
 
@@ -41,6 +41,11 @@ export default async function handler(req, res) {
 
     // Get the response data
     const data = await response.json();
+
+    // Log errors for debugging
+    if (!response.ok) {
+      console.error(`[Gemini Proxy] API Error (${response.status}):`, data?.error?.message || data);
+    }
 
     // Return the response with the same status code
     return res.status(response.status).json(data);
