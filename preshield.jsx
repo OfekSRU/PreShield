@@ -301,6 +301,8 @@ function AuthScreen({ onAuth }) {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [resetSent, setResetSent] = useState(false);
+  const [language, setLanguage] = useState("EN");
+  const [isDarkMode, setIsDarkMode] = useState(true);
 
   // Restore remembered email
   useEffect(() => {
