@@ -2717,17 +2717,31 @@ function ProjectView({ t, project, subView, setSubView, onUpdate, onDelete, onBa
 /** Gemini requires the first content role to be `user`; our thread stores the assistant as `ai`. */
 function interviewThreadToGeminiContents(thread) {
   const mapped = thread.map((m) => ({
-    role: m.role === "ai" ? "model" : "user",
+    role: (m.role === "ai" || m.role === "model") ? "model" : "user",
     parts: [{ text: m.content || "" }],
   }));
-  if (!mapped.length) return [];
+  
+  if (mapped.length === 0) return [];
+
+  const result = [];
+  // Gemini requires the first message to be from the user
   if (mapped[0].role === "model") {
-    return [{ role: "user", parts: [{ text: "Start the interview now." }] }, ...mapped];
+    result.push({ role: "user", parts: [{ text: "Continue the discussion." }] });
   }
-  if (mapped.length === 1 && mapped[0].role === "user") {
-    return [{ role: "user", parts: [{ text: "Start the interview." }] }, mapped[0]];
+
+  for (let i = 0; i < mapped.length; i++) {
+    const current = mapped[i];
+    const last = result[result.length - 1];
+
+    if (last && last.role === current.role) {
+      // If consecutive roles are the same, merge their content
+      last.parts[0].text += "\n\n" + current.parts[0].text;
+    } else {
+      result.push(current);
+    }
   }
-  return mapped;
+
+  return result;
 }
 
 function buildGeminiRequestBody(systemPrompt, thread) {
