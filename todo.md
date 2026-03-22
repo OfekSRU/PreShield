@@ -32,20 +32,20 @@
 ## Detailed Report Page Redesign
 
 ### Page Layout & Structure
-- [ ] Separate detailed report and AI risk agent into new page
-- [ ] Divide page in half: left for detailed report, right for AI risk agent
-- [ ] Create detailed report focused on specific risk with solution steps
+- [x] Separate detailed report and AI risk agent into new page
+- [x] Divide page in half: left for detailed report, right for AI risk agent
+- [x] Create detailed report focused on specific risk with solution steps
 
 ### AI Risk Agent & Roadmap
-- [ ] Implement AI risk agent to help user step-by-step solve each risk
-- [ ] Create roadmap feature showing user's path to solution based on answers
-- [ ] Update risk assessment scores as user progresses through solution steps
-- [ ] Update final risk score based on user updates
+- [x] Implement AI risk agent to help user step-by-step solve each risk
+- [x] Create roadmap feature showing user's path to solution based on answers
+- [x] Update risk assessment scores as user progresses through solution steps
+- [x] Update final risk score based on user updates
 
 ### Export Options for Detailed Report
-- [ ] Export detailed report in same formats as project report
-- [ ] Export roadmap with detailed report
-- [ ] Ensure risk matrix displays correctly in all export formats
+- [x] Export detailed report in same formats as project report
+- [x] Export roadmap with detailed report
+- [x] Ensure risk matrix displays correctly in all export formats
 
 ## Gmail Invite Problems
 
@@ -63,3 +63,12 @@
 - [ ] Test export functionality for all formats
 - [ ] Test Gmail invite functionality
 - [ ] Test detailed report page with AI agent
+
+## IN PROGRESS: Detailed Report Page Redesign
+- [ ] Phase 1: Analyze current risk view
+- [ ] Phase 2: Create DetailedRiskPage component
+- [ ] Phase 3: Implement AI risk agent
+- [ ] Phase 4: Add roadmap feature
+- [ ] Phase 5: Dynamic risk scoring
+- [ ] Phase 6: Export functionality
+- [ ] Phase 7: Test and commit

@@ -3272,6 +3272,9 @@ function RisksView({ t, project, onUpdate, colorMode }) {
   const [riskChatMessages, setRiskChatMessages] = useState([]);
   const [riskChatLoading, setRiskChatLoading] = useState(false);
   const [riskChatInput, setRiskChatInput] = useState("");
+  const [detailedRiskView, setDetailedRiskView] = useState(null);
+  const [roadmapSteps, setRoadmapSteps] = useState([]);
+  const [currentStep, setCurrentStep] = useState(0);
   const sortedRisks = [...risks].sort((a, b) => b.risk_score - a.risk_score);
   const mitBlue = colorMode === "light" ? "#2563EB" : "#60A5FA";
 
@@ -3430,6 +3433,43 @@ function RisksView({ t, project, onUpdate, colorMode }) {
     setRiskChatInput("");
   };
 
+  const openDetailedRiskView = (risk) => {
+    setDetailedRiskView(risk);
+    setRoadmapSteps([
+      { id: 1, title: "Understand the Risk", description: "Analyze the root causes and impacts", completed: false },
+      { id: 2, title: "Develop Mitigation Strategy", description: "Create actionable mitigation steps", completed: false },
+      { id: 3, title: "Implement Controls", description: "Execute mitigation measures", completed: false },
+      { id: 4, title: "Monitor & Track", description: "Track effectiveness with KPIs", completed: false },
+      { id: 5, title: "Review & Adjust", description: "Refine strategy based on results", completed: false },
+    ]);
+    setCurrentStep(0);
+    startRiskMitigationChat(risk);
+  };
+
+  const completeRoadmapStep = (stepId) => {
+    setRoadmapSteps(steps => steps.map(s => s.id === stepId ? { ...s, completed: true } : s));
+    const completedCount = roadmapSteps.filter(s => s.completed).length + 1;
+    const progressPercent = (completedCount / roadmapSteps.length) * 100;
+    
+    if (detailedRiskView && progressPercent >= 60) {
+      const newLikelihood = Math.max(1, detailedRiskView.likelihood - 0.5);
+      const newImpact = Math.max(1, detailedRiskView.impact - 0.3);
+      const newScore = parseFloat((newLikelihood * newImpact).toFixed(2));
+      updateRisk(detailedRiskView.id, {
+        likelihood: newLikelihood,
+        impact: newImpact,
+        risk_score: newScore,
+        status: completedCount >= 3 ? "mitigating" : detailedRiskView.status,
+      });
+      setDetailedRiskView({ ...detailedRiskView, likelihood: newLikelihood, impact: newImpact, risk_score: newScore });
+    }
+  };
+
+  const closeDetailedRiskView = () => {
+    setDetailedRiskView(null);
+    closeRiskMitigationChat();
+  };
+
   const toggleRiskEdit = (risk, e) => {
     e.stopPropagation();
     if (expandedRisk === risk.id) {
@@ -3538,7 +3578,7 @@ function RisksView({ t, project, onUpdate, colorMode }) {
                       border: "none",
                       borderRadius: 6,
                     }}
-                    onClick={(e) => { e.stopPropagation(); startRiskMitigationChat(risk); }}
+                    onClick={(e) => { e.stopPropagation(); openDetailedRiskView(risk); }}
                   >
                     📋 {t.detailedReport || "Detailed Report"}
                   </button>
@@ -3677,6 +3717,104 @@ function RisksView({ t, project, onUpdate, colorMode }) {
               <button className="btn-ghost" onClick={closeRiskMitigationChat} style={{ fontSize: 12, padding: "8px 12px" }}>
                 Done
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {detailedRiskView && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 999, display: "flex", flexDirection: "column" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", background: "var(--ps-card-bg)", borderBottom: "1px solid var(--ps-border-subtle)" }}>
+            <div style={{ fontSize: 16, fontWeight: 700, color: "var(--ps-text)" }}>📋 {detailedRiskView.title}</div>
+            <button onClick={closeDetailedRiskView} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "var(--ps-text-muted)" }}>✕</button>
+          </div>
+          <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
+            <div style={{ flex: 1, overflowY: "auto", padding: 24, background: "var(--ps-bg)", borderRight: "1px solid var(--ps-border-subtle)" }}>
+              <div style={{ marginBottom: 24 }}>
+                <h4 style={{ fontSize: 14, fontWeight: 700, color: "var(--ps-text)", marginBottom: 12 }}>Risk Overview</h4>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+                  <div style={{ padding: 12, background: "var(--ps-card-bg)", borderRadius: 8, border: "1px solid var(--ps-border-subtle)" }}>
+                    <div style={{ fontSize: 11, color: "var(--ps-text-muted)", marginBottom: 4 }}>Likelihood</div>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: "var(--ps-text)" }}>{detailedRiskView.likelihood}/5</div>
+                  </div>
+                  <div style={{ padding: 12, background: "var(--ps-card-bg)", borderRadius: 8, border: "1px solid var(--ps-border-subtle)" }}>
+                    <div style={{ fontSize: 11, color: "var(--ps-text-muted)", marginBottom: 4 }}>Impact</div>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: "var(--ps-text)" }}>{detailedRiskView.impact}/5</div>
+                  </div>
+                  <div style={{ padding: 12, background: "var(--ps-card-bg)", borderRadius: 8, border: "1px solid var(--ps-border-subtle)" }}>
+                    <div style={{ fontSize: 11, color: "var(--ps-text-muted)", marginBottom: 4 }}>Risk Score</div>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: "var(--ps-text)" }}>{detailedRiskView.risk_score}</div>
+                  </div>
+                  <div style={{ padding: 12, background: "var(--ps-card-bg)", borderRadius: 8, border: "1px solid var(--ps-border-subtle)" }}>
+                    <div style={{ fontSize: 11, color: "var(--ps-text-muted)", marginBottom: 4 }}>Status</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "var(--ps-text)", textTransform: "capitalize" }}>{detailedRiskView.status || "identified"}</div>
+                  </div>
+                </div>
+              </div>
+              <div style={{ marginBottom: 24 }}>
+                <h4 style={{ fontSize: 14, fontWeight: 700, color: "var(--ps-text)", marginBottom: 12 }}>Mitigation Roadmap</h4>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {roadmapSteps.map((step, idx) => (
+                    <div key={step.id} style={{ padding: 12, background: "var(--ps-card-bg)", borderRadius: 8, border: `2px solid ${step.completed ? "#4CAF50" : "var(--ps-border-subtle)"}", cursor: "pointer", transition: "all 0.2s" }} onClick={() => completeRoadmapStep(step.id)}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        <input type="checkbox" checked={step.completed} onChange={() => completeRoadmapStep(step.id)} style={{ cursor: "pointer" }} />
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: "var(--ps-text)", textDecoration: step.completed ? "line-through" : "none" }}>{idx + 1}. {step.title}</div>
+                          <div style={{ fontSize: 11, color: "var(--ps-text-muted)", marginTop: 2 }}>{step.description}</div>
+                        </div>
+                        <span style={{ fontSize: 16 }}>{step.completed ? "✓" : "○"}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ marginTop: 12, padding: 12, background: "var(--ps-panel)", borderRadius: 8, fontSize: 12 }}>
+                  <div style={{ color: "var(--ps-text-muted)", marginBottom: 4 }}>Progress</div>
+                  <div style={{ height: 6, background: "var(--ps-border-subtle)", borderRadius: 3, overflow: "hidden" }}>
+                    <div style={{ height: "100%", background: "#4CAF50", width: `${(roadmapSteps.filter(s => s.completed).length / roadmapSteps.length) * 100}%`, transition: "width 0.3s" }}></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div style={{ flex: 1, overflowY: "auto", padding: 24, background: "var(--ps-card-bg)", display: "flex", flexDirection: "column" }}>
+              <h4 style={{ fontSize: 14, fontWeight: 700, color: "var(--ps-text)", marginBottom: 12 }}>AI Risk Agent</h4>
+              <div style={{ flex: 1, overflowY: "auto", marginBottom: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+                {riskChatMessages.map((msg, i) => (
+                  <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
+                    <div style={{
+                      maxWidth: "90%",
+                      padding: "12px 14px",
+                      borderRadius: msg.role === "user" ? "12px 12px 2px 12px" : "12px 12px 12px 2px",
+                      background: msg.role === "user" ? "#5B5BFF" : "var(--ps-panel)",
+                      border: msg.role === "ai" ? "1px solid var(--ps-border-subtle)" : "none",
+                      fontSize: 12,
+                      lineHeight: 1.6,
+                      color: msg.role === "user" ? "#fff" : "var(--ps-text)",
+                      whiteSpace: "pre-wrap",
+                      wordBreak: "break-word"
+                    }}>
+                      {msg.content}
+                    </div>
+                  </div>
+                ))}
+                {riskChatLoading && <div style={{ fontSize: 11, color: "var(--ps-text-muted)", fontStyle: "italic" }}>AI is thinking...</div>}
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <input
+                  type="text"
+                  placeholder="Ask for guidance..."
+                  value={riskChatInput}
+                  onChange={e => setRiskChatInput(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === "Enter" && !riskChatLoading && riskChatInput.trim()) {
+                      sendRiskChatMessage(riskChatInput);
+                      setRiskChatInput("");
+                    }
+                  }}
+                  style={{ flex: 1, padding: "8px 12px", fontSize: 12, borderRadius: 6, border: "1px solid var(--ps-border-subtle)", background: "var(--ps-bg)", color: "var(--ps-text)" }}
+                  disabled={riskChatLoading}
+                />
+                <button onClick={() => { if (riskChatInput.trim()) { sendRiskChatMessage(riskChatInput); setRiskChatInput(""); } }} disabled={riskChatLoading || !riskChatInput.trim()} style={{ padding: "8px 12px", fontSize: 12, background: "#5B5BFF", color: "#fff", border: "none", borderRadius: 6, cursor: "pointer" }}>Send</button>
+              </div>
             </div>
           </div>
         </div>
