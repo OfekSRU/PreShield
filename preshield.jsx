@@ -3243,6 +3243,7 @@ function RisksView({ t, project, onUpdate, colorMode }) {
   const [riskMitigationChat, setRiskMitigationChat] = useState(null);
   const [riskChatMessages, setRiskChatMessages] = useState([]);
   const [riskChatLoading, setRiskChatLoading] = useState(false);
+  const [riskChatInput, setRiskChatInput] = useState("");
   const sortedRisks = [...risks].sort((a, b) => b.risk_score - a.risk_score);
   const mitBlue = colorMode === "light" ? "#2563EB" : "#60A5FA";
 
@@ -3398,6 +3399,7 @@ function RisksView({ t, project, onUpdate, colorMode }) {
   const closeRiskMitigationChat = () => {
     setRiskMitigationChat(null);
     setRiskChatMessages([]);
+    setRiskChatInput("");
   };
 
   const toggleRiskEdit = (risk, e) => {
@@ -3615,20 +3617,23 @@ function RisksView({ t, project, onUpdate, colorMode }) {
               <input
                 type="text"
                 placeholder="Type your response..."
+                value={riskChatInput}
+                onChange={e => setRiskChatInput(e.target.value)}
                 onKeyDown={e => {
-                  if (e.key === "Enter" && !riskChatLoading) {
-                    sendRiskChatMessage(e.target.value);
-                    e.target.value = "";
+                  if (e.key === "Enter" && !riskChatLoading && riskChatInput.trim()) {
+                    sendRiskChatMessage(riskChatInput);
+                    setRiskChatInput("");
                   }
                 }}
                 style={{ flex: 1 }}
                 disabled={riskChatLoading}
               />
-              <button className="btn-primary" onClick={e => {
-                const input = e.target.parentElement.querySelector("input");
-                sendRiskChatMessage(input.value);
-                input.value = "";
-              }} disabled={riskChatLoading}>
+              <button className="btn-primary" onClick={() => {
+                if (riskChatInput.trim()) {
+                  sendRiskChatMessage(riskChatInput);
+                  setRiskChatInput("");
+                }
+              }} disabled={riskChatLoading || !riskChatInput.trim()}>
                 Send
               </button>
             </div>
