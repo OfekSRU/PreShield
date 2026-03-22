@@ -4,7 +4,7 @@ const SUPABASE_URL = "https://uuakospgqfltwahjtaqw.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1YWtvc3BncWZsdHdhaGp0YXF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMzM5MDYsImV4cCI6MjA4OTYwOTkwNn0.S5uU1qiRsbX-nfcE7ZKEEFNKdPc8-NHUoXS0Es9D0gM";
 
 /** Dev/preview: Vite proxies /api/gemini/v1beta/models/{model}:generateContent. Optional: VITE_GEMINI_GENERATE_URL for a custom single endpoint. */
-const DEFAULT_GEMINI_MODELS = ["gemini-2.5-flash-lite", "gemini-2.0-flash", "gemini-2.5-flash", "gemini-1.5-flash"];
+const DEFAULT_GEMINI_MODELS = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-2.0-flash-lite"];
 function parseGeminiModelFallbacks() {
   const multi = import.meta.env.VITE_GEMINI_MODELS?.trim();
   if (multi) {
@@ -16,12 +16,12 @@ function parseGeminiModelFallbacks() {
   return [...DEFAULT_GEMINI_MODELS];
 }
 const GEMINI_MODEL_FALLBACKS = parseGeminiModelFallbacks();
-const GEMINI_API_ROOT = import.meta.env.VITE_GEMINI_API_ROOT || "/api/gemini";
+const GEMINI_API_ROOT = import.meta.env.VITE_GEMINI_API_ROOT || "/api/gemini/generateContent";
 const CUSTOM_GEMINI_URL = import.meta.env.VITE_GEMINI_GENERATE_URL?.trim();
 
 function geminiEndpointForModel(modelId) {
-  // Use the simpler /api/gemini/generateContent endpoint that accepts model as query param
-  return `${GEMINI_API_ROOT}/generateContent?model=${encodeURIComponent(modelId)}`;
+  // Use the direct /api/gemini/generateContent endpoint
+  return `${GEMINI_API_ROOT}?model=${encodeURIComponent(modelId)}`;
 }
 
 function geminiResponseText(data) {
