@@ -8,15 +8,16 @@ const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
  * The app will automatically rotate through these models if one hits quota limits.
  */
 const DEFAULT_GEMINI_MODELS = [
-  "gemini-1.5-flash",
-  "gemini-1.5-flash-8b",
-  "gemini-1.5-flash-001",
-  "gemini-1.5-pro",
-  "gemini-1.5-pro-latest",
+  "gemini-2.5-flash-lite",
   "gemini-2.0-flash",
-  "gemini-2.0-flash-lite",
-  "gemini-2.0-flash-001",
-  "gemini-2.0-flash-lite-001",
+  "gemini-1.5-flash",
+];
+
+/** OpenRouter models as fallback when Gemini quota is exhausted */
+const DEFAULT_OPENROUTER_MODELS = [
+  "openai/gpt-4o-mini",
+  "anthropic/claude-3.5-sonnet",
+  "google/gemini-2.0-flash-lite",
 ];
 function parseGeminiModelFallbacks() {
   const multi = import.meta.env.VITE_GEMINI_MODELS?.trim();
@@ -31,6 +32,18 @@ function parseGeminiModelFallbacks() {
 const GEMINI_MODEL_FALLBACKS = parseGeminiModelFallbacks();
 const GEMINI_API_ROOT = import.meta.env.VITE_GEMINI_API_ROOT || "/api/gemini/generateContent";
 const CUSTOM_GEMINI_URL = import.meta.env.VITE_GEMINI_GENERATE_URL?.trim();
+
+/** Parse OpenRouter models from environment or use defaults */
+function parseOpenRouterModelFallbacks() {
+  const multi = import.meta.env.VITE_OPENROUTER_MODELS?.trim();
+  if (multi) {
+    const arr = [...new Set(multi.split(/[\s,]+/).map((s) => s.trim()).filter(Boolean))];
+    if (arr.length) return arr;
+  }
+  return [...DEFAULT_OPENROUTER_MODELS];
+}
+const OPENROUTER_MODEL_FALLBACKS = parseOpenRouterModelFallbacks();
+const OPENROUTER_API_ROOT = "https://openrouter.ai/api/v1/chat/completions";
 
 function geminiEndpointForModel(modelId) {
   // Use the direct endpoint with the model as a query parameter
@@ -89,6 +102,65 @@ function writePreferredGeminiModelIndex(i) {
   } catch (_) {}
 }
 
+/** Try OpenRouter as fallback when Gemini quota is exhausted */
+async function tryOpenRouterFallback(body) {
+  const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY || import.meta.env.OPENROUTER_API_KEY;
+  if (!apiKey) {
+    console.log("[OpenRouter] No API key configured, skipping fallback");
+    return null;
+  }
+  
+  const models = OPENROUTER_MODEL_FALLBACKS;
+  for (const model of models) {
+    try {
+      const messages = body.contents?.map(c => ({
+        role: c.role === "user" ? "user" : "assistant",
+        content: c.parts?.[0]?.text || ""
+      })) || [];
+      
+      const res = await fetch(OPENROUTER_API_ROOT, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`,
+          "HTTP-Referer": window.location.origin,
+          "X-Title": "PreShield"
+        },
+        body: JSON.stringify({
+          model: model,
+          messages: messages,
+          temperature: 0.7,
+          max_tokens: 2048
+        })
+      });
+      
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.choices?.[0]?.message?.content) {
+        console.log(`[OpenRouter] Success with model: ${model}`);
+        const geminiData = {
+          candidates: [{
+            content: {
+              parts: [{ text: data.choices[0].message.content }]
+            }
+          }]
+        };
+        return { res, data: geminiData, model: `openrouter/${model}` };
+      }
+      
+      if (!res.ok) {
+        console.log(`[OpenRouter] Model ${model} failed with status ${res.status}`);
+        continue;
+      }
+    } catch (e) {
+      console.log(`[OpenRouter] Error with model ${model}:`, e.message);
+      continue;
+    }
+  }
+  
+  console.log("[OpenRouter] All fallback models exhausted");
+  return null;
+}
+
 /** Tries models in order (starting from last working). Retries on quota / rate limit / unavailable. */
 async function geminiGenerateWithModels(body) {
   if (CUSTOM_GEMINI_URL) {
@@ -126,6 +198,12 @@ async function geminiGenerateWithModels(body) {
     if (geminiFailureIsRetriable(res.status, data)) continue;
     break;
   }
+  
+  // If all Gemini models failed, try OpenRouter as fallback
+  console.log("[AI] All Gemini models exhausted, attempting OpenRouter fallback...");
+  const orRes = await tryOpenRouterFallback(body);
+  if (orRes) return orRes;
+  
   return {
     res: lastRes || new Response(null, { status: 503 }),
     data: lastData,
