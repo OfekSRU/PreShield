@@ -3,8 +3,8 @@ import { useState, useEffect, useRef, useMemo } from "react";
 const SUPABASE_URL = "https://uuakospgqfltwahjtaqw.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1YWtvc3BncWZsdHdhaGp0YXF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMzM5MDYsImV4cCI6MjA4OTYwOTkwNn0.S5uU1qiRsbX-nfcE7ZKEEFNKdPc8-NHUoXS0Es9D0gM";
 
-/** Dev/preview: Vite proxies /api/gemini/v1beta/models/{model}:generateContent. Optional: VITE_GEMINI_GENERATE_URL for a custom single endpoint. */
-const DEFAULT_GEMINI_MODELS = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-2.0-flash-lite"];
+/** All available free Gemini models for automatic rotation when quota is reached. */
+const DEFAULT_GEMINI_MODELS = ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-1.5-flash"];
 function parseGeminiModelFallbacks() {
   const multi = import.meta.env.VITE_GEMINI_MODELS?.trim();
   if (multi) {
@@ -39,13 +39,23 @@ function geminiApiError(data, status) {
 }
 
 function geminiFailureIsRetriable(status, data) {
+  // Don't retry on auth errors
   if (status === 401 || status === 403) return false;
+  
+  // Always retry on rate limit, unavailable, and quota errors
   if (status === 429 || status === 503) return true;
   if (status === 404) return true;
+  
   const msg = String(data?.error?.message || "").toLowerCase();
   const st = String(data?.error?.status || "").toUpperCase();
+  
+  // Check for quota and resource exhaustion errors
   if (st === "RESOURCE_EXHAUSTED" || st === "UNAVAILABLE" || st === "DEADLINE_EXCEEDED") return true;
   if (status === 400 && /quota|exhausted|rate limit|billing|too many requests|resource has been exhausted|limit exceeded/.test(msg)) return true;
+  
+  // Retry on 500+ server errors
+  if (status >= 500) return true;
+  
   return false;
 }
 
