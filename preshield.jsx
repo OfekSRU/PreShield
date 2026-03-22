@@ -105,39 +105,33 @@ function writePreferredGeminiModelIndex(i) {
 
 /** Try OpenRouter as fallback when Gemini quota is exhausted */
 async function tryOpenRouterFallback(body) {
-  const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY || import.meta.env.OPENROUTER_API_KEY;
-  if (!apiKey) {
-    console.log("[OpenRouter] No API key configured, skipping fallback");
-    return null;
-  }
-  
   const models = OPENROUTER_MODEL_FALLBACKS;
+  
   for (const model of models) {
     try {
+      // Convert Gemini format to OpenRouter format
       const messages = body.contents?.map(c => ({
         role: c.role === "user" ? "user" : "assistant",
         content: c.parts?.[0]?.text || ""
       })) || [];
       
-      const res = await fetch(OPENROUTER_API_ROOT, {
+      console.log(`[OpenRouter] Attempting fallback with model: ${model}`);
+      
+      // Use server-side proxy to call OpenRouter API
+      const res = await fetch("/api/openrouter", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`,
-          "HTTP-Referer": window.location.origin,
-          "X-Title": "PreShield"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           model: model,
-          messages: messages,
-          temperature: 0.7,
-          max_tokens: 2048
+          messages: messages
         })
       });
       
       const data = await res.json().catch(() => ({}));
+      
       if (res.ok && data.choices?.[0]?.message?.content) {
         console.log(`[OpenRouter] Success with model: ${model}`);
+        // Convert OpenRouter response to Gemini format for compatibility
         const geminiData = {
           candidates: [{
             content: {
@@ -149,7 +143,7 @@ async function tryOpenRouterFallback(body) {
       }
       
       if (!res.ok) {
-        console.log(`[OpenRouter] Model ${model} failed with status ${res.status}`);
+        console.log(`[OpenRouter] Model ${model} failed with status ${res.status}:`, data);
         continue;
       }
     } catch (e) {
