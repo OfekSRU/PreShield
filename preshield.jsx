@@ -2980,14 +2980,13 @@ function RisksView({ t, project, onUpdate, colorMode }) {
     setRiskChatMessages([]);
     setRiskChatLoading(true);
     try {
-      const systemPrompt = `You are a risk mitigation expert. Help develop a detailed mitigation plan for this risk:\n\nRisk: ${risk.title}\nDescription: ${risk.description}\nLikelihood: ${risk.likelihood}/5, Impact: ${risk.impact}/5\nCurrent Plan: ${risk.mitigation}\n\nAsk clarifying questions and help create an actionable mitigation strategy. After the conversation, suggest updated values for likelihood, impact, and mitigation steps.`;
-      const { res, data } = await geminiGenerateWithModels({
-        contents: [{ parts: [{ text: systemPrompt }] }]
-      });
+      const systemPrompt = `You are an expert risk mitigation specialist. Your role is to help develop a comprehensive, detailed mitigation plan for this specific risk.\n\nRISK DETAILS:\n- Title: ${risk.title}\n- Description: ${risk.description}\n- Current Likelihood: ${risk.likelihood}/5\n- Current Impact: ${risk.impact}/5\n- Current Mitigation: ${risk.mitigation || "Not yet defined"}\n- Status: ${risk.status || "identified"}\n\nPROVIDE:\n1. 5-7 detailed, actionable mitigation tips specific to this risk\n2. For each tip: implementation steps and expected outcomes\n3. Clarifying questions to understand project context\n4. Refined mitigation strategy through conversation\n5. Realistic updates to likelihood and impact\n6. Specific metrics or KPIs to track effectiveness\n\nFOCUS: Keep conversation ONLY about this specific risk. Provide practical, implementable guidance.`;
+      const { res, data } = await geminiGenerateWithModels(buildGeminiStartBody(systemPrompt));
       if (!res?.ok) throw new Error("Failed to start chat");
       const text = geminiResponseText(data);
       setRiskChatMessages([{ role: "ai", content: text }]);
     } catch (e) {
+      console.error("Risk mitigation chat error:", e);
       setRiskChatMessages([{ role: "ai", content: "Error starting mitigation chat. Please try again." }]);
     } finally {
       setRiskChatLoading(false);
@@ -3000,23 +2999,28 @@ function RisksView({ t, project, onUpdate, colorMode }) {
     setRiskChatMessages(newMessages);
     setRiskChatLoading(true);
     try {
-      const systemPrompt = `You are helping mitigate this risk: ${riskMitigationChat.title}. Continue the conversation and help refine the mitigation plan.`;
-      const contents = [{ parts: [{ text: systemPrompt }] }];
-      for (const msg of newMessages) {
-        contents.push({
-          parts: [{ text: msg.content }],
-          role: msg.role === "user" ? "user" : "model"
-        });
-      }
-      const { res, data } = await geminiGenerateWithModels({ contents });
+      const systemPrompt = `You are an expert risk mitigation specialist helping to refine the mitigation plan for this risk: ${riskMitigationChat.title}. Continue the conversation and help develop practical, actionable mitigation strategies. Keep responses focused on this specific risk.`;
+      const body = buildGeminiRequestBody(systemPrompt, newMessages.map(m => ({
+        role: m.role === "user" ? "user" : "model",
+        content: m.content
+      })));
+      const { res, data } = await geminiGenerateWithModels(body);
       if (!res?.ok) throw new Error("Failed to get response");
       const text = geminiResponseText(data);
       setRiskChatMessages([...newMessages, { role: "ai", content: text }]);
     } catch (e) {
+      console.error("Risk chat message error:", e);
       setRiskChatMessages([...newMessages, { role: "ai", content: "Error: Could not process your message." }]);
     } finally {
       setRiskChatLoading(false);
     }
+  };
+
+  const saveRiskMitigationUpdates = () => {
+    if (!riskMitigationChat) return;
+    // AI suggestions for updates will be extracted from chat history
+    // For now, users can manually update parameters in the risk edit form
+    closeRiskMitigationChat();
   };
 
   const exportRiskReport = async (format = 'html') => {
