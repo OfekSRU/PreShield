@@ -418,13 +418,16 @@ function AuthScreen({ onAuth }) {
             <svg width="24" height="24" viewBox="0 0 14 14" fill="none"><path d="M7 1L13 4V7C13 10.3 10.3 13 7 13C3.7 13 1 10.3 1 7V4L7 1Z" stroke="#fff" strokeWidth="1.5" fill="none"/><path d="M4.5 7L6.5 9L9.5 5.5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </div>
           <div style={{ fontSize: 22, fontWeight: 700, color: isDarkMode ? "#E8E6E0" : "#1A1A1A", letterSpacing: "-0.5px" }}>PreShield</div>
-          <div style={{ fontSize: 13, color: isDarkMode ? "#9A9898" : "#666666", marginTop: 4 }}>AI-powered pre-mortem risk assessment</div>
+          <div style={{ fontSize: 13, color: isDarkMode ? "#9A9898" : "#666666", marginTop: 4 }}>{t.subtitle || "AI-powered pre-mortem risk assessment"}</div>
         </div>
 
         {/* Card */}
-        <div style={{ background: isDarkMode ? "#13131A" : "#FFFFFF", border: `1px solid ${isDarkMode ? "#1E1E2E" : "#E0E0E0"}`, borderRadius: 16, padding: "32px 28px", boxShadow: isDarkMode ? "none" : "0 4px 12px rgba(0,0,0,0.08)" }}>
+        <div style={{ background: isDarkMode ? "#13131A" : "#FFFFFF", border: `1px solid ${isDarkMode ? "#1E1E2E" : "#E0E0E0"}`, borderRadius: 16, padding: "32px 28px", boxShadow: isDarkMode ? "none" : "0 4px 12px rgba(0,0,0,0.08)", color: isDarkMode ? "#E8E6E0" : "#1A1A1A" }}>
           <div style={{ fontSize: 18, fontWeight: 600, color: isDarkMode ? "#E8E6E0" : "#1A1A1A", marginBottom: 22 }}>
             {mode === "login" ? t.signIn : mode === "register" ? t.createAccount : t.resetPassword}
+          </div>
+          <div style={{ fontSize: 13, color: isDarkMode ? "#9A9898" : "#666666", marginBottom: 20 }}>
+            {t.subtitle}
           </div>
 
           {resetSent ? (
@@ -439,7 +442,7 @@ function AuthScreen({ onAuth }) {
               {/* Email */}
               <div>
                 <label style={{ fontSize: 12, color: isDarkMode ? "#9A9898" : "#666666", marginBottom: 6, display: "block" }}>{t.email}</label>
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@company.com" onKeyDown={e => e.key === "Enter" && submit()} autoFocus style={{ background: isDarkMode ? "#13131A" : "#F5F5F5", border: `1px solid ${isDarkMode ? "#2A2A3A" : "#D0D0D0"}`, color: isDarkMode ? "#E8E6E0" : "#1A1A1A" }} />
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@company.com" onKeyDown={e => e.key === "Enter" && submit()} autoFocus style={{ background: isDarkMode ? "#13131A" : "#F5F5F5", border: `1px solid ${isDarkMode ? "#2A2A3A" : "#D0D0D0"}`, color: isDarkMode ? "#E8E6E0" : "#1A1A1A", fontSize: 14 }} />
               </div>
 
               {/* Password */}
@@ -447,14 +450,14 @@ function AuthScreen({ onAuth }) {
                 <div>
                   <label style={{ fontSize: 12, color: isDarkMode ? "#9A9898" : "#666666", marginBottom: 6, display: "block" }}>{t.password}</label>
                   <div style={{ position: "relative" }}>
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      value={password}
-                      onChange={e => setPassword(e.target.value)}
-                      placeholder="••••••••"
-                      onKeyDown={e => e.key === "Enter" && submit()}
-                      style={{ paddingRight: 42, background: isDarkMode ? "#13131A" : "#F5F5F5", border: `1px solid ${isDarkMode ? "#2A2A3A" : "#D0D0D0"}`, color: isDarkMode ? "#E8E6E0" : "#1A1A1A" }}
-                    />
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    onKeyDown={e => e.key === "Enter" && submit()}
+                    style={{ paddingRight: 42, background: isDarkMode ? "#13131A" : "#F5F5F5", border: `1px solid ${isDarkMode ? "#2A2A3A" : "#D0D0D0"}`, color: isDarkMode ? "#E8E6E0" : "#1A1A1A", fontSize: 14 }}
+                  />
                     <button
                       onClick={() => setShowPassword(v => !v)}
                       style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: isDarkMode ? "#9A9898" : "#666666", fontSize: 12, padding: 2, cursor: "pointer" }} >
@@ -478,6 +481,7 @@ function AuthScreen({ onAuth }) {
                       placeholder="Your business name"
                       onKeyDown={e => e.key === "Enter" && submit()}
                       autoFocus={false}
+                      style={{ background: isDarkMode ? "#13131A" : "#F5F5F5", border: `1px solid ${isDarkMode ? "#2A2A3A" : "#D0D0D0"}`, color: isDarkMode ? "#E8E6E0" : "#1A1A1A", fontSize: 14 }}
                     />
                   </div>
                   <div>
@@ -489,6 +493,7 @@ function AuthScreen({ onAuth }) {
                       placeholder="City, Country"
                       onKeyDown={e => e.key === "Enter" && submit()}
                       autoFocus={false}
+                      style={{ background: isDarkMode ? "#13131A" : "#F5F5F5", border: `1px solid ${isDarkMode ? "#2A2A3A" : "#D0D0D0"}`, color: isDarkMode ? "#E8E6E0" : "#1A1A1A", fontSize: 14 }}
                     />
                   </div>
                 </>
@@ -527,18 +532,18 @@ function AuthScreen({ onAuth }) {
                 }
                 style={{ background: "#5B5BFF", color: "#fff", borderRadius: 8, padding: "12px", fontSize: 14, fontWeight: 500, opacity: (loading || (mode === "register" && !passwordValid && password.length > 0)) ? 0.6 : 1, marginTop: 4 }}
               >
-                {loading ? "..." : mode === "login" ? "Sign in" : mode === "register" ? "Create account" : "Send reset link"}
+                {loading ? "..." : mode === "login" ? t.signIn : mode === "register" ? t.createAccount : t.resetPassword}
               </button>
 
               {/* Mode switchers */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 2 }}>
                 {mode === "login" ? (
                   <>
-                    <button onClick={() => { setMode("register"); setError(null); setSuccess(null); }} style={{ fontSize: 12, color: "#9A9898", background: "none", border: "none", cursor: "pointer" }}>Create account</button>
-                    <button onClick={() => { setMode("reset"); setError(null); setSuccess(null); }} style={{ fontSize: 12, color: "#9A9898", background: "none", border: "none", cursor: "pointer" }}>Forgot password?</button>
+                    <button onClick={() => { setMode("register"); setError(null); setSuccess(null); }} style={{ fontSize: 12, color: isDarkMode ? "#9A9898" : "#666666", background: "none", border: "none", cursor: "pointer" }}>{t.createAccount}</button>
+                    <button onClick={() => { setMode("reset"); setError(null); setSuccess(null); }} style={{ fontSize: 12, color: isDarkMode ? "#9A9898" : "#666666", background: "none", border: "none", cursor: "pointer" }}>{t.forgotPassword}</button>
                   </>
                 ) : (
-                  <button onClick={() => { setMode("login"); setError(null); setSuccess(null); }} style={{ fontSize: 12, color: "#9A9898", background: "none", border: "none", cursor: "pointer" }}>← Back to sign in</button>
+                  <button onClick={() => { setMode("login"); setError(null); setSuccess(null); }} style={{ fontSize: 12, color: isDarkMode ? "#9A9898" : "#666666", background: "none", border: "none", cursor: "pointer" }}>{t.backToSignIn}</button>
                 )}
               </div>
             </div>
@@ -575,28 +580,37 @@ const sb = {
     const trimmed = String(email || "").trim().toLowerCase();
     const origin = (typeof window !== "undefined" && window.location && window.location.origin) ? window.location.origin : "";
 
-    // Create + send is handled by the Supabase Edge Function.
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/send-invite-email`, {
-      method: "POST",
-      headers: {
-        apikey: SUPABASE_KEY,
-        Authorization: `Bearer ${SUPABASE_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        projectId,
-        projectName,
-        email: trimmed,
-        businessName: userBusinessMetadata?.business_name,
-        businessLocation: userBusinessMetadata?.business_location,
-        subject: emailSubject,
-        bodyText: emailBodyText,
-        origin,
-      }),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data?.message || data?.error || "Failed to send invite email");
-    return data;
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/send-invite-email`, {
+        method: "POST",
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          projectId,
+          projectName,
+          email: trimmed,
+          businessName: userBusinessMetadata?.business_name,
+          businessLocation: userBusinessMetadata?.business_location,
+          subject: emailSubject,
+          bodyText: emailBodyText,
+          origin,
+        }),
+      });
+      
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.message || data?.error || `Failed to send invite email (${res.status})`);
+      }
+      
+      const data = await res.json().catch(() => ({}));
+      return data;
+    } catch (error) {
+      console.error("createInviteByEmail error:", error);
+      throw error;
+    }
   },
   async getInviteByToken(token) {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/project_invites?invite_token=eq.${token}&status=eq.pending`, {
@@ -2754,18 +2768,9 @@ function ExportModal({ project, t, onClose }) {
       } else if (format === "pptx") {
         const html = buildPPTXHtml(project, t);
         download(html, `PreShield_${filename}_deck.html`, "text/html");
-      } else if (format === "jpeg") {
-        const html = buildReportHTML(project, t);
-        const blob = new Blob([html], { type: "text/html" });
-        const url = URL.createObjectURL(blob);
-        const win = window.open(url, "_blank");
-        setTimeout(() => { URL.revokeObjectURL(url); }, 3000);
-        // Show instruction for JPEG
-        setExporting("jpeg-tip");
-        return;
       }
     } finally {
-      if (format !== "jpeg") setExporting(null);
+      setExporting(null);
     }
   };
 
@@ -2781,8 +2786,7 @@ function ExportModal({ project, t, onClose }) {
     { id: "pdf", icon: "📄", label: "PDF", desc: "Opens print dialog — Save as PDF" },
     { id: "word", icon: "📝", label: "Word (.doc)", desc: "Opens in Microsoft Word or Google Docs" },
     { id: "html", icon: "🌐", label: "HTML", desc: "Download as HTML file" },
-    { id: "pptx", icon: "📊", label: "Presentation", desc: "16:9 slide deck — open & print to PPTX" },
-    { id: "jpeg", icon: "🖼️", label: "JPEG / Image", desc: "Opens report — use browser screenshot" },
+    { id: "pptx", icon: "📊", label: "PowerPoint", desc: "Download as PowerPoint presentation" },
   ];
 
   return (
@@ -2792,28 +2796,19 @@ function ExportModal({ project, t, onClose }) {
           <div style={{ fontWeight: 600, fontSize: 16, color: "var(--ps-text)" }}>Export Report</div>
           <button onClick={onClose} style={{ background: "none", border: "none", color: "var(--ps-text-muted)", fontSize: 18, cursor: "pointer", padding: "0 4px" }}>✕</button>
         </div>
-        {exporting === "jpeg-tip" ? (
-          <div style={{ textAlign: "center", padding: "12px 0" }}>
-            <div style={{ fontSize: 32, marginBottom: 12 }}>🖼️</div>
-            <div style={{ fontSize: 14, color: "var(--ps-text)", marginBottom: 8 }}>Report opened in new tab</div>
-            <div style={{ fontSize: 13, color: "var(--ps-text-muted)", marginBottom: 20 }}>Use your browser's screenshot tool or <strong>Cmd+Shift+4</strong> (Mac) / <strong>Windows+Shift+S</strong> to capture as JPEG.</div>
-            <button className="btn-primary" style={{ width: "100%" }} onClick={() => setExporting(null)}>Back</button>
-          </div>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {formats.map(f => (
-              <button key={f.id} onClick={() => doExport(f.id)} disabled={!!exporting} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 16px", background: exporting === f.id ? "#5B5BFF22" : "var(--ps-panel)", border: "1px solid var(--ps-border-subtle)", borderRadius: 10, cursor: "pointer", textAlign: "left", transition: "all 0.15s", opacity: exporting && exporting !== f.id ? 0.5 : 1 }}>
-                <span style={{ fontSize: 22, flexShrink: 0 }}>{f.icon}</span>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 500, color: "var(--ps-text)" }}>{f.label}</div>
-                  <div style={{ fontSize: 11, color: "var(--ps-text-muted)", marginTop: 1 }}>{f.desc}</div>
-                </div>
-                {exporting === f.id && <span style={{ fontSize: 12, color: "#5B5BFF" }}>...</span>}
-                {!exporting && <span style={{ color: "var(--ps-text-muted)", fontSize: 14 }}>↓</span>}
-              </button>
-            ))}
-          </div>
-        )}
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {formats.map(f => (
+            <button key={f.id} onClick={() => doExport(f.id)} disabled={!!exporting} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 16px", background: exporting === f.id ? "#5B5BFF22" : "var(--ps-panel)", border: "1px solid var(--ps-border-subtle)", borderRadius: 10, cursor: "pointer", textAlign: "left", transition: "all 0.15s", opacity: exporting && exporting !== f.id ? 0.5 : 1 }}>
+              <span style={{ fontSize: 22, flexShrink: 0 }}>{f.icon}</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 14, fontWeight: 500, color: "var(--ps-text)" }}>{f.label}</div>
+                <div style={{ fontSize: 11, color: "var(--ps-text-muted)", marginTop: 1 }}>{f.desc}</div>
+              </div>
+              {exporting === f.id && <span style={{ fontSize: 12, color: "#5B5BFF" }}>...</span>}
+              {!exporting && <span style={{ color: "var(--ps-text-muted)", fontSize: 14 }}>↓</span>}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -3021,11 +3016,6 @@ function InterviewView({ t, project, onUpdate, lang }) {
       setTranslationInProgress(true);
       const translated = await Promise.all(
         messages.map(async (msg) => {
-          // Only translate AI messages, keep user messages as-is
-          if (msg.role === "user") {
-            return msg;
-          }
-          
           // Check cache first
           const cacheKey = `${msg.content}-${lang}`;
           if (translationCacheRef.current[cacheKey]) {
@@ -3035,7 +3025,7 @@ function InterviewView({ t, project, onUpdate, lang }) {
             };
           }
           
-          // Translate AI message
+          // Translate both AI and user messages
           const translatedContent = await translateMessage(msg.content, lang);
           translationCacheRef.current[cacheKey] = translatedContent;
           
@@ -3055,6 +3045,14 @@ function InterviewView({ t, project, onUpdate, lang }) {
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
+  const langNameMap = {
+    "en": "English",
+    "he": "Hebrew",
+    "es": "Spanish",
+    "fr": "French",
+    "de": "German"
+  };
+  
   const systemPrompt = `You are PreShield, an expert AI facilitator conducting a pre-mortem risk assessment interview. Your goal is to uncover hidden risks before the project starts.
 
 Project context:
@@ -3073,7 +3071,7 @@ Your job:
 4. After 6-10 questions, output a JSON block like this:
 {"risks": [{"title": "...", "description": "...", "category": "technical|resource|schedule|scope|communication|external|organizational|financial", "likelihood": 1-5, "impact": 1-5, "mitigation": "Step 1: ...\nStep 2: ...\nStep 3: ..."}]}
 
-Keep questions conversational, insightful, and specific to the project type. Avoid generic risk checklists. Respond in ${lang === "en" ? "English" : lang === "he" ? "Hebrew" : lang === "es" ? "Spanish" : lang === "fr" ? "French" : "German"}.
+Keep questions conversational, insightful, and specific to the project type. Avoid generic risk checklists. Respond in ${langNameMap[lang] || "English"}.
 
 If this is the first message, introduce yourself briefly and ask your first question about what could most likely cause this project to fail.`;
 
@@ -3996,7 +3994,8 @@ function TeamView({ t, project, onUpdate }) {
       ? `${userBusinessName} has invited you to collaborate on "${project.name}" on PreShield.`
       : `You have been invited to collaborate on "${project.name}" on PreShield.`;
     const subject = `You're invited to "${project.name}" on PreShield`;
-    const body = `Hi,\n\n${businessLine}\n\nClick here to join:\n{{joinUrl}}\n`;
+    const projectUrl = typeof window !== "undefined" ? window.location.origin : "";
+    const body = `Hi,\n\n${businessLine}\n\nProject: ${project.name}\nURL: ${projectUrl}\n\nClick here to join:\n{{joinUrl}}\n\nBest regards,\nPreShield Team`;
     setEmailSubjectDraft(subject);
     setEmailBodyDraft(body);
     setEmailSubjectSaved(subject);
@@ -4056,20 +4055,36 @@ function TeamView({ t, project, onUpdate }) {
     setInviting(true);
     setError(null);
     try {
-      await sb.createInviteByEmail(
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(trimmed)) {
+        setError("Please enter a valid email address.");
+        setInviting(false);
+        return;
+      }
+      
+      let bodyToSend = emailBodyDraft;
+      if (!bodyToSend.includes("{{joinUrl}}")) {
+        bodyToSend += "\n\nClick here to join:\n{{joinUrl}}";
+      }
+      
+      const response = await sb.createInviteByEmail(
         project.id,
         project.name,
         trimmed,
-        { business_name: userBusinessName, business_location: userBusinessLocation }
-        ,
+        { business_name: userBusinessName, business_location: userBusinessLocation },
         emailSubjectDraft,
-        emailBodyDraft
+        bodyToSend
       );
-      setShowInviteDialog(false);
-      setInviteEmail("");
-      await load();
+      
+      if (response) {
+        setShowInviteDialog(false);
+        setInviteEmail("");
+        await load();
+      }
     } catch (e) {
-      setError(e?.message || "Failed to send invite. Try again.");
+      console.error("Invite error:", e);
+      const errorMsg = e?.message || "Failed to send invite. Please try again.";
+      setError(errorMsg);
     } finally {
       setInviting(false);
     }
