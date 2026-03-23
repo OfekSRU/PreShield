@@ -2526,56 +2526,26 @@ function buildReportHTML(project, t, forPrint = false) {
 
   <div class="matrix-container">
     <div style="font-size:13px; font-weight:700; margin-bottom:12px; text-align:center; text-transform:uppercase; letter-spacing:1px; color:#888;">Risk Matrix</div>
-    <svg viewBox="0 0 720 480" style="width:100%; max-width:600px; margin:0 auto; display:block;">
-      <defs>
-        <filter id="matrixShadow" x="-50%" y="-50%" width="200%" height="200%">
-          <feDropShadow dx="0" dy="1.5" stdDeviation="2" floodOpacity="0.2" />
-        </filter>
-        <clipPath id="matrixClip">
-          <rect x="52" y="58" width="628" height="378" rx="12" ry="12" />
-        </clipPath>
-      </defs>
-      
-      <!-- Grid cells -->
-      ${[1, 2, 3, 4, 5].map(L => {
-        return [1, 2, 3, 4, 5].map(I => {
-          const x0 = 52 + (I - 1) * 125.6;
-          const y0 = 58 + (5 - L) * 75.6;
+    <div class="matrix-grid">
+      ${[5, 4, 3, 2, 1].map(L => `
+        <div class="matrix-label">${L}</div>
+        ${[1, 2, 3, 4, 5].map(I => {
+          const cellRisks = risks.filter(r => Math.round(r.likelihood) === L && Math.round(r.impact) === I);
           const p = (I * L) / 25;
           const bg = p < 0.12 ? "#E8F5E9" : p < 0.28 ? "#FFE9B5" : p < 0.5 ? "#FFE0B2" : "#FFEBEE";
-          return `<rect x="${x0 + 1.5}" y="${y0 + 1.5}" width="122.6" height="72.6" rx="10" ry="10" fill="${bg}" stroke="rgba(0,0,0,0.07)" stroke-width="1" />`;
-        }).join("");
-      }).join("")}
-      
-      <!-- Outer border -->
-      <rect x="52" y="58" width="628" height="378" fill="none" stroke="#ddd" stroke-width="1.2" rx="12" />
-      
-      <!-- Axis labels -->
-      <text x="366" y="22" text-anchor="middle" font-size="12" font-weight="600" fill="#333">Impact</text>
-      ${[1, 2, 3, 4, 5].map(v => `<text x="${52 + (v - 1) * 125.6 + 62.8}" y="48" text-anchor="middle" font-size="11" fill="#999">${v}</text>`).join("")}
-      <text x="18" y="247" text-anchor="middle" font-size="11" fill="#999" transform="rotate(-90 18 247)">Likelihood</text>
-      ${[1, 2, 3, 4, 5].map(v => `<text x="40" y="${58 + (5 - v) * 75.6 + 37.8 + 4}" text-anchor="end" font-size="11" fill="#999">${v}</text>`).join("")}
-      
-      <!-- Risk dots -->
-      <g clip-path="url(#matrixClip)">
-        ${sorted.map((r, idx) => {
-          const impact = Math.round(r.impact ?? 3);
-          const likelihood = Math.round(r.likelihood ?? 3);
-          const cx = 52 + (impact - 1) * 125.6 + 62.8;
-          const cy = 58 + (5 - likelihood) * 75.6 + 37.8;
-          const color = riskColor(r.risk_score);
-          const textColor = color === "#EF9F27" ? "#333" : "#fff";
-          const num = idx + 1;
-          const rating = Math.round(((Math.min(25, Math.max(1, r.risk_score)) - 1) / 24) * 99 + 1);
-          return `
-            <circle cx="${cx}" cy="${cy}" r="17" fill="${color}" filter="url(#matrixShadow)" />
-            <text x="${cx}" y="${cy - 3}" text-anchor="middle" font-size="9" font-weight="800" fill="${textColor}">#${num}</text>
-            <text x="${cx}" y="${cy + 8}" text-anchor="middle" font-size="8" font-weight="700" fill="${textColor}" opacity="0.95">${rating}</text>
-          `;
+          return `<div class="matrix-cell" style="background:${bg}">
+            ${cellRisks.length > 0 ? `<div class="matrix-dot" title="${cellRisks.length} risks"></div>` : ""}
+          </div>`;
         }).join("")}
-      </g>
-    </svg>
-    <div class="matrix-legend" style="margin-top:16px;">
+      `).join("")}
+      <div></div>
+      ${[1, 2, 3, 4, 5].map(I => `<div class="matrix-label">${I}</div>`).join("")}
+    </div>
+    <div style="display:flex; justify-content:space-between; margin-top:4px; font-size:10px; color:#aaa; font-weight:700; text-transform:uppercase; letter-spacing:1px;">
+      <div style="margin-left:30px">Impact →</div>
+      <div style="transform:rotate(-90deg) translateY(-280px); width:0; white-space:nowrap;">Likelihood →</div>
+    </div>
+    <div class="matrix-legend">
       <div class="legend-item"><div class="legend-color" style="background:#1D9E75"></div>Low</div>
       <div class="legend-item"><div class="legend-color" style="background:#EF9F27"></div>Medium</div>
       <div class="legend-item"><div class="legend-color" style="background:#F57C00"></div>High</div>
@@ -2754,9 +2724,18 @@ function ExportModal({ project, t, onClose }) {
       } else if (format === "pptx") {
         const html = buildPPTXHtml(project, t);
         download(html, `PreShield_${filename}_deck.html`, "text/html");
+      } else if (format === "jpeg") {
+        const html = buildReportHTML(project, t);
+        const blob = new Blob([html], { type: "text/html" });
+        const url = URL.createObjectURL(blob);
+        const win = window.open(url, "_blank");
+        setTimeout(() => { URL.revokeObjectURL(url); }, 3000);
+        // Show instruction for JPEG
+        setExporting("jpeg-tip");
+        return;
       }
     } finally {
-      setExporting(null);
+      if (format !== "jpeg") setExporting(null);
     }
   };
 
@@ -2773,6 +2752,7 @@ function ExportModal({ project, t, onClose }) {
     { id: "word", icon: "📝", label: "Word (.doc)", desc: "Opens in Microsoft Word or Google Docs" },
     { id: "html", icon: "🌐", label: "HTML", desc: "Download as HTML file" },
     { id: "pptx", icon: "📊", label: "Presentation", desc: "16:9 slide deck — open & print to PPTX" },
+    { id: "jpeg", icon: "🖼️", label: "JPEG / Image", desc: "Opens report — use browser screenshot" },
   ];
 
   return (
@@ -2949,95 +2929,13 @@ function mergeProjectMessagesByChannel(existing, channel, nextChannelMessages) {
   return [...keep, ...nextChannelMessages];
 }
 
-// ─── Translation helper ──────────────────────────────────────────────────────
-async function translateMessage(text, targetLang) {
-  if (!text || targetLang === "en") return text;
-  
-  const langMap = {
-    "he": "Hebrew",
-    "es": "Spanish",
-    "fr": "French",
-    "de": "German",
-    "en": "English"
-  };
-  
-  const targetLangName = langMap[targetLang] || "English";
-  
-  try {
-    const body = {
-      contents: [{
-        role: "user",
-        parts: [{
-          text: `Translate the following text to ${targetLangName}. Only provide the translation, nothing else. Do not add any explanation or additional text.\n\n${text}`
-        }]
-      }],
-      generationConfig: { maxOutputTokens: 2048, temperature: 0.3 },
-    };
-    
-    const { res, data } = await geminiGenerateWithModels(body);
-    
-    if (res?.ok) {
-      const translated = geminiResponseText(data);
-      return translated.trim() || text;
-    }
-  } catch (e) {
-    console.warn("Translation failed:", e);
-  }
-  
-  return text;
-}
-
 function InterviewView({ t, project, onUpdate, lang }) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [startError, setStartError] = useState(null);
-  const [translatedMessages, setTranslatedMessages] = useState([]);
-  const [translationInProgress, setTranslationInProgress] = useState(false);
   const messagesEndRef = useRef(null);
   const allMessages = project.messages || [];
   const messages = allMessages.filter((m) => (m?.channel || "interview") === "interview");
-  
-  // Translation cache to avoid redundant API calls
-  const translationCacheRef = useRef({});
-  
-  // Translate messages when language changes
-  useEffect(() => {
-    const translateAllMessages = async () => {
-      if (messages.length === 0) {
-        setTranslatedMessages([]);
-        return;
-      }
-      
-      setTranslationInProgress(true);
-      const translated = await Promise.all(
-        messages.map(async (msg) => {
-          // Translate both AI and user messages
-          // Check cache first
-          const cacheKey = `${msg.content}-${lang}`;
-          if (translationCacheRef.current[cacheKey]) {
-            return {
-              ...msg,
-              content: translationCacheRef.current[cacheKey]
-            };
-          }
-          
-          // Translate message (both AI and user)
-          const translatedContent = await translateMessage(msg.content, lang);
-          translationCacheRef.current[cacheKey] = translatedContent;
-          
-          return {
-            ...msg,
-            content: translatedContent
-          };
-        })
-      );
-      
-      setTranslatedMessages(translated);
-      setTranslationInProgress(false);
-    };
-    
-    translateAllMessages();
-  }, [lang, messages]);
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
@@ -3188,7 +3086,7 @@ If this is the first message, introduce yourself briefly and ask your first ques
         {project.status === "completed" && !project.report_generated && <div style={{ fontSize: 12, color: "#1D9E75", marginLeft: "auto", fontWeight: 600 }}>✓ {t.statusCompleted}</div>}
       </div>
       <div style={{ flex: 1, overflowY: "auto", padding: "4px 0", display: "flex", flexDirection: "column", gap: 12 }}>
-        {translatedMessages.map((m, i) => (
+        {messages.map((m, i) => (
           <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}>
             <div style={{
               maxWidth: "72%",
@@ -3205,7 +3103,7 @@ If this is the first message, introduce yourself briefly and ask your first ques
             </div>
           </div>
         ))}
-        {(loading || translationInProgress) && (
+        {loading && (
           <div style={{ display: "flex", justifyContent: "flex-start" }}>
             <div className="card" style={{ padding: "12px 16px", display: "flex", gap: 6, alignItems: "center" }}>
               {[0, 1, 2].map(i => <div key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: "#5B5BFF", animation: `bounce 1s ${i * 0.15}s infinite` }} />)}
@@ -3259,7 +3157,6 @@ function RisksView({ t, project, onUpdate, colorMode }) {
   const [riskMitigationChat, setRiskMitigationChat] = useState(null);
   const [riskChatMessages, setRiskChatMessages] = useState([]);
   const [riskChatLoading, setRiskChatLoading] = useState(false);
-  const [riskChatInput, setRiskChatInput] = useState("");
   const sortedRisks = [...risks].sort((a, b) => b.risk_score - a.risk_score);
   const mitBlue = colorMode === "light" ? "#2563EB" : "#60A5FA";
 
@@ -3415,7 +3312,6 @@ function RisksView({ t, project, onUpdate, colorMode }) {
   const closeRiskMitigationChat = () => {
     setRiskMitigationChat(null);
     setRiskChatMessages([]);
-    setRiskChatInput("");
   };
 
   const toggleRiskEdit = (risk, e) => {
@@ -3633,23 +3529,20 @@ function RisksView({ t, project, onUpdate, colorMode }) {
               <input
                 type="text"
                 placeholder="Type your response..."
-                value={riskChatInput}
-                onChange={e => setRiskChatInput(e.target.value)}
                 onKeyDown={e => {
-                  if (e.key === "Enter" && !riskChatLoading && riskChatInput.trim()) {
-                    sendRiskChatMessage(riskChatInput);
-                    setRiskChatInput("");
+                  if (e.key === "Enter" && !riskChatLoading) {
+                    sendRiskChatMessage(e.target.value);
+                    e.target.value = "";
                   }
                 }}
                 style={{ flex: 1 }}
                 disabled={riskChatLoading}
               />
-              <button className="btn-primary" onClick={() => {
-                if (riskChatInput.trim()) {
-                  sendRiskChatMessage(riskChatInput);
-                  setRiskChatInput("");
-                }
-              }} disabled={riskChatLoading || !riskChatInput.trim()}>
+              <button className="btn-primary" onClick={e => {
+                const input = e.target.parentElement.querySelector("input");
+                sendRiskChatMessage(input.value);
+                input.value = "";
+              }} disabled={riskChatLoading}>
                 Send
               </button>
             </div>
@@ -3982,7 +3875,7 @@ function TeamView({ t, project, onUpdate }) {
       ? `${userBusinessName} has invited you to collaborate on "${project.name}" on PreShield.`
       : `You have been invited to collaborate on "${project.name}" on PreShield.`;
     const subject = `You're invited to "${project.name}" on PreShield`;
-    const body = `Hi,\n\n${businessLine}\n\nProject: ${project.name}\n\nClick here to join:\n{{joinUrl}}\n\nBest regards,\nPreShield Team`;
+    const body = `Hi,\n\n${businessLine}\n\nClick here to join:\n{{joinUrl}}\n`;
     setEmailSubjectDraft(subject);
     setEmailBodyDraft(body);
     setEmailSubjectSaved(subject);
