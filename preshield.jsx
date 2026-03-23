@@ -575,12 +575,14 @@ const sb = {
     const trimmed = String(email || "").trim().toLowerCase();
     const origin = (typeof window !== "undefined" && window.location && window.location.origin) ? window.location.origin : "";
 
-    // Use Vercel proxy to send invite email with Supabase credentials
-    const res = await fetch(typeof window !== "undefined" ? `${window.location.origin}/api/send-invite-email` : "/api/send-invite-email", {
+    // Call Supabase Edge Function directly
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/send-invite-email`, {
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
       },
-      method: "POST",
       body: JSON.stringify({
         projectId,
         projectName,
@@ -590,12 +592,13 @@ const sb = {
         subject: emailSubject,
         bodyText: emailBodyText,
         origin,
-        supabaseUrl: SUPABASE_URL,
-        supabaseKey: SUPABASE_KEY,
       }),
     });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data?.message || data?.error || "Failed to send invite email");
+    if (!res.ok) {
+      console.error("Invite error:", data);
+      throw new Error(data?.message || data?.error || `Failed to send invite email (${res.status})`);
+    }
     return data;
   },
   async getInviteByToken(token) {
