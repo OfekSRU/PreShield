@@ -576,13 +576,11 @@ const sb = {
     const origin = (typeof window !== "undefined" && window.location && window.location.origin) ? window.location.origin : "";
 
     // Create + send is handled by the Supabase Edge Function.
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/send-invite-email`, {
-      method: "POST",
+    const res = await fetch(typeof window !== "undefined" ? `${window.location.origin}/api/send-invite-email` : "/api/send-invite-email", {
       headers: {
-        apikey: SUPABASE_KEY,
-        Authorization: `Bearer ${SUPABASE_KEY}`,
         "Content-Type": "application/json",
       },
+      method: "POST",
       body: JSON.stringify({
         projectId,
         projectName,

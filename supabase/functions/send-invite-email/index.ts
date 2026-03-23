@@ -187,17 +187,66 @@ serve(async (req) => {
     await writeLine("DATA\r\n");
     await readResponse();
 
+    // Create HTML email with Open Graph metadata for better Gmail preview
+    const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta property="og:title" content="${subject}">
+  <meta property="og:description" content="${businessName ? `${businessName} has invited you to collaborate on "${projectName}" on PreShield.` : `You have been invited to collaborate on "${projectName}" on PreShield.`}">
+  <meta property="og:url" content="${joinUrl}">
+  <meta property="og:type" content="website">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 8px 8px 0 0; text-align: center; }
+    .header h1 { margin: 0; font-size: 24px; }
+    .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+    .project-name { font-size: 18px; font-weight: bold; color: #667eea; margin: 15px 0; }
+    .cta-button { display: inline-block; background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; font-weight: bold; }
+    .cta-button:hover { background: #764ba2; }
+    .url-display { background: white; padding: 15px; border-left: 4px solid #667eea; margin: 20px 0; word-break: break-all; font-family: monospace; font-size: 12px; color: #666; }
+    .footer { text-align: center; padding: 20px; color: #999; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>You're Invited!</h1>
+    </div>
+    <div class="content">
+      <p>Hi,</p>
+      <p>${businessName ? `<strong>${businessName}</strong> has invited you to collaborate on` : 'You have been invited to collaborate on'} <span class="project-name">"${projectName}"</span> on PreShield.</p>
+      <p>Click the button below to join and start collaborating:</p>
+      <center>
+        <a href="${joinUrl}" class="cta-button">Join Project</a>
+      </center>
+      <p>Or copy and paste this link in your browser:</p>
+      <div class="url-display">${joinUrl}</div>
+      <p>If you have any questions, feel free to reach out to the team.</p>
+      <p>Best regards,<br>PreShield Team</p>
+    </div>
+    <div class="footer">
+      <p>This is an automated message. Please do not reply to this email.</p>
+    </div>
+  </div>
+</body>
+</html>
+    `.trim();
+
     const headers = [
       `From: ${EMAIL_FROM}`,
       `To: ${trimmedEmail}`,
       `Subject: ${subject}`,
       "MIME-Version: 1.0",
-      "Content-Type: text/plain; charset=UTF-8",
+      "Content-Type: text/html; charset=UTF-8",
       "Content-Transfer-Encoding: 8bit",
       "",
     ].join("\r\n");
 
-    const safeBodyLines = (headers + finalBodyText.replace(/\r\n/g, "\n")).split("\n").map((line) => {
+    const safeBodyLines = (headers + htmlContent.replace(/\r\n/g, "\n")).split("\n").map((line) => {
       // Dot-stuffing per RFC 5321
       return line.startsWith(".") ? `.${line}` : line;
     }).join("\r\n");
