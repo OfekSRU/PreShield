@@ -2754,18 +2754,9 @@ function ExportModal({ project, t, onClose }) {
       } else if (format === "pptx") {
         const html = buildPPTXHtml(project, t);
         download(html, `PreShield_${filename}_deck.html`, "text/html");
-      } else if (format === "jpeg") {
-        const html = buildReportHTML(project, t);
-        const blob = new Blob([html], { type: "text/html" });
-        const url = URL.createObjectURL(blob);
-        const win = window.open(url, "_blank");
-        setTimeout(() => { URL.revokeObjectURL(url); }, 3000);
-        // Show instruction for JPEG
-        setExporting("jpeg-tip");
-        return;
       }
     } finally {
-      if (format !== "jpeg") setExporting(null);
+      setExporting(null);
     }
   };
 
@@ -2782,7 +2773,6 @@ function ExportModal({ project, t, onClose }) {
     { id: "word", icon: "📝", label: "Word (.doc)", desc: "Opens in Microsoft Word or Google Docs" },
     { id: "html", icon: "🌐", label: "HTML", desc: "Download as HTML file" },
     { id: "pptx", icon: "📊", label: "Presentation", desc: "16:9 slide deck — open & print to PPTX" },
-    { id: "jpeg", icon: "🖼️", label: "JPEG / Image", desc: "Opens report — use browser screenshot" },
   ];
 
   return (
@@ -3021,11 +3011,7 @@ function InterviewView({ t, project, onUpdate, lang }) {
       setTranslationInProgress(true);
       const translated = await Promise.all(
         messages.map(async (msg) => {
-          // Only translate AI messages, keep user messages as-is
-          if (msg.role === "user") {
-            return msg;
-          }
-          
+          // Translate both AI and user messages
           // Check cache first
           const cacheKey = `${msg.content}-${lang}`;
           if (translationCacheRef.current[cacheKey]) {
@@ -3035,7 +3021,7 @@ function InterviewView({ t, project, onUpdate, lang }) {
             };
           }
           
-          // Translate AI message
+          // Translate message (both AI and user)
           const translatedContent = await translateMessage(msg.content, lang);
           translationCacheRef.current[cacheKey] = translatedContent;
           
@@ -3996,7 +3982,7 @@ function TeamView({ t, project, onUpdate }) {
       ? `${userBusinessName} has invited you to collaborate on "${project.name}" on PreShield.`
       : `You have been invited to collaborate on "${project.name}" on PreShield.`;
     const subject = `You're invited to "${project.name}" on PreShield`;
-    const body = `Hi,\n\n${businessLine}\n\nClick here to join:\n{{joinUrl}}\n`;
+    const body = `Hi,\n\n${businessLine}\n\nProject: ${project.name}\n\nClick here to join:\n{{joinUrl}}\n\nBest regards,\nPreShield Team`;
     setEmailSubjectDraft(subject);
     setEmailBodyDraft(body);
     setEmailSubjectSaved(subject);
