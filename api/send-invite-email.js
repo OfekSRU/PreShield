@@ -4,9 +4,7 @@
  * This function handles requests to /api/send-invite-email and proxies them
  * to the Supabase Edge Function server-side, avoiding CORS issues.
  * 
- * Environment Variables Required:
- * - SUPABASE_URL: Supabase project URL
- * - SUPABASE_ANON_KEY: Supabase anonymous key
+ * Accepts Supabase credentials from request body or environment variables.
  */
 
 export default async function handler(req, res) {
@@ -26,17 +24,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    const SUPABASE_URL = process.env.SUPABASE_URL || "";
-    const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || "";
-
-    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-      console.error("[send-invite-email] Missing Supabase environment variables");
-      return res.status(500).json({
-        error: "Server configuration error",
-        message: "Missing Supabase configuration",
-      });
-    }
-
     const {
       projectId,
       projectName,
@@ -46,13 +33,27 @@ export default async function handler(req, res) {
       subject,
       bodyText,
       origin,
+      supabaseUrl,
+      supabaseKey,
     } = req.body;
+
+    // Get Supabase credentials from request body or environment variables
+    const SUPABASE_URL = supabaseUrl || process.env.SUPABASE_URL || "";
+    const SUPABASE_ANON_KEY = supabaseKey || process.env.SUPABASE_ANON_KEY || "";
+
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+      console.error("[send-invite-email] Missing Supabase credentials");
+      return res.status(500).json({
+        error: "Server configuration error",
+        message: "Missing Supabase configuration. Please provide supabaseUrl and supabaseKey in request body.",
+      });
+    }
 
     // Validate required fields
     if (!projectId || !projectName || !email) {
       return res.status(400).json({
         error: "Missing required fields",
-        message: "projectId, projectName, and email are required",
+        message: "projectId, projectName, email, supabaseUrl, and supabaseKey are required",
       });
     }
 

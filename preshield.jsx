@@ -575,7 +575,7 @@ const sb = {
     const trimmed = String(email || "").trim().toLowerCase();
     const origin = (typeof window !== "undefined" && window.location && window.location.origin) ? window.location.origin : "";
 
-    // Create + send is handled by the Supabase Edge Function.
+    // Use Vercel proxy to send invite email with Supabase credentials
     const res = await fetch(typeof window !== "undefined" ? `${window.location.origin}/api/send-invite-email` : "/api/send-invite-email", {
       headers: {
         "Content-Type": "application/json",
@@ -590,6 +590,8 @@ const sb = {
         subject: emailSubject,
         bodyText: emailBodyText,
         origin,
+        supabaseUrl: SUPABASE_URL,
+        supabaseKey: SUPABASE_KEY,
       }),
     });
     const data = await res.json().catch(() => ({}));
