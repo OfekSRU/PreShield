@@ -3861,7 +3861,8 @@ Your Rules:
                     </button>
                   </div>
                 )}
-              </div>            </div>
+              </div>
+            </div>
             
             {/* Bottom Export & Action Bar */}
             <div style={{ display: "flex", gap: 12, justifyContent: "flex-end", flexWrap: "wrap", marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--ps-border-subtle)" }}>
