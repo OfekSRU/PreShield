@@ -3316,12 +3316,59 @@ function RisksView({ t, project, onUpdate, colorMode }) {
     }
   };
 
+  // Intelligent step completion detection based on conversation context
+  const evaluateStepCompletion = (userMsg, aiResponse, stepNum) => {
+    const userLower = userMsg.toLowerCase();
+    const aiLower = aiResponse.toLowerCase();
+    
+    const stepPatterns = {
+      1: {
+        // Step 1: User should provide context/answers to clarifying questions
+        keywords: ["because", "due to", "caused by", "reason", "issue", "problem", "happened", "occurred"],
+        aiConfirm: ["understand", "got it", "clear", "thanks", "excellent", "great", "now", "next step", "step 2"]
+      },
+      2: {
+        // Step 2: User should identify stakeholders
+        keywords: ["team", "manager", "lead", "stakeholder", "person", "people", "department", "involved"],
+        aiConfirm: ["stakeholder", "identified", "good", "perfect", "excellent", "step 3", "next"]
+      },
+      3: {
+        // Step 3: User should define success criteria
+        keywords: ["success", "goal", "target", "metric", "measure", "achieve", "complete", "done", "when"],
+        aiConfirm: ["criteria", "success", "measurable", "clear", "perfect", "step 4", "next"]
+      },
+      4: {
+        // Step 4: User should provide action plan details
+        keywords: ["action", "plan", "timeline", "week", "day", "month", "task", "do", "implement", "start"],
+        aiConfirm: ["plan", "timeline", "action", "good", "excellent", "step 5", "next", "ready"]
+      },
+      5: {
+        // Step 5: User should report implementation progress
+        keywords: ["done", "completed", "finished", "implemented", "resolved", "fixed", "working", "progress"],
+        aiConfirm: ["great", "excellent", "resolved", "success", "complete", "finished", "congratulations"]
+      }
+    };
+    
+    const pattern = stepPatterns[stepNum];
+    if (!pattern) return false;
+    
+    // Check if user message contains relevant keywords for this step
+    const userHasRelevantContent = pattern.keywords.some(kw => userLower.includes(kw));
+    // Check if AI confirms step completion
+    const aiConfirmsCompletion = pattern.aiConfirm.some(kw => aiLower.includes(kw));
+    
+    // Step is complete if user provided relevant content AND AI acknowledged it
+    return userHasRelevantContent && aiConfirmsCompletion;
+  };
+
   const sendRiskChatMessage = async (userMessage) => {
     if (!riskMitigationChat || !userMessage.trim()) return;
     const newMessages = [...riskChatMessages, { role: "user", content: userMessage }];
     setRiskChatMessages(newMessages);
     setRiskChatLoading(true);
     try {
+      // Build a more intelligent system prompt that includes conversation history context
+      const recentHistory = newMessages.slice(-6).map(m => `${m.role === "user" ? "User" : "Agent"}: ${m.content}`).join("\n");
       const systemPrompt = `You are an expert risk mitigation specialist guiding the user STEP-BY-STEP through resolving this risk: ${riskMitigationChat.title}.
       
 Current Status:
@@ -3333,18 +3380,24 @@ Current Status:
 - Completed Steps: ${completedSteps.join(", ") || "None yet"}
 
 Step Definitions:
-1. STEP 1: Understand root cause - Ask clarifying questions
-2. STEP 2: Identify stakeholders - Who needs to be involved?
-3. STEP 3: Define success criteria - What does success look like?
-4. STEP 4: Create action plan - Specific timeline and tasks
-5. STEP 5: Track implementation - Monitor progress and adjust
+1. STEP 1: Understand root cause - Ask clarifying questions about WHY this risk exists
+2. STEP 2: Identify stakeholders - WHO needs to be involved to mitigate this
+3. STEP 3: Define success criteria - WHAT does success look like (measurable)
+4. STEP 4: Create action plan - HOW and WHEN will you implement fixes
+5. STEP 5: Track implementation - REPORT progress and verify results
+
+Recent Conversation:
+${recentHistory}
 
 Your Rules:
-- Keep focus on the CURRENT step only
-- When user completes a step, acknowledge it and move to the next
-- When they report actions/fixes, suggest score updates in format: "Likelihood: X/5, Impact: Y/5"
-- Be concise and actionable
-- Track their progress through all 5 steps`;
+- ONLY focus on the CURRENT step (${currentStep}/5)
+- Do NOT skip steps or jump ahead
+- When the user provides relevant information for the current step, acknowledge it clearly
+- When they complete a step, explicitly say something like "Great! You've completed Step ${currentStep}. Now let's move to Step ${currentStep + 1}."
+- When they report actions/fixes, suggest score updates in format: "Suggested update: Likelihood: X/5, Impact: Y/5"
+- Be concise, specific, and actionable
+- If user input doesn't address the current step, guide them back to it`;
+      
       const thread = newMessages.map(m => ({
         role: m.role === "user" ? "user" : "ai",
         content: m.content
@@ -3354,6 +3407,11 @@ Your Rules:
       if (!res?.ok) throw new Error("Failed to get response");
       const text = geminiResponseText(data);
       
+      if (!text || !text.trim()) {
+        throw new Error("Empty response from AI");
+      }
+      
+      // Extract score suggestions
       const likelihoodMatch = text.match(/Likelihood:\s*(\d+)/);
       const impactMatch = text.match(/Impact:\s*(\d+)/);
       if (likelihoodMatch || impactMatch) {
@@ -3363,8 +3421,9 @@ Your Rules:
         });
       }
       
-      const stepCompletionKeywords = ["great", "excellent", "perfect", "step", "next", "ready", "completed"];
-      if (stepCompletionKeywords.some(kw => text.toLowerCase().includes(kw)) && currentStep < 5) {
+      // Intelligently detect step completion based on conversation context
+      const stepCompleted = evaluateStepCompletion(userMessage, text, currentStep);
+      if (stepCompleted && currentStep < 5) {
         setCurrentStep(currentStep + 1);
         setCompletedSteps([...completedSteps, currentStep]);
       }
@@ -3377,7 +3436,8 @@ Your Rules:
       onUpdate({ ...project, risks: updatedRisks });
     } catch (e) {
       console.error("Risk chat message error:", e);
-      const errorMessages = [...newMessages, { role: "ai", content: "Error: Could not process your message." }];
+      const errorMsg = e?.message || "Error: Could not process your message. Please try again.";
+      const errorMessages = [...newMessages, { role: "ai", content: errorMsg }];
       setRiskChatMessages(errorMessages);
       updateRisk(riskMitigationChat.id, { chatHistory: errorMessages });
     } finally {
