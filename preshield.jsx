@@ -3259,6 +3259,10 @@ function RisksView({ t, project, onUpdate, colorMode }) {
   const [riskMitigationChat, setRiskMitigationChat] = useState(null);
   const [riskChatMessages, setRiskChatMessages] = useState([]);
   const [riskChatLoading, setRiskChatLoading] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [completedSteps, setCompletedSteps] = useState([]);
+  const [riskUpdates, setRiskUpdates] = useState({});
+  const [suggestedUpdates, setSuggestedUpdates] = useState(null);
   const sortedRisks = [...risks].sort((a, b) => b.risk_score - a.risk_score);
   const mitBlue = colorMode === "light" ? "#2563EB" : "#60A5FA";
 
@@ -3281,13 +3285,17 @@ function RisksView({ t, project, onUpdate, colorMode }) {
     setRiskMitigationChat(risk);
     const history = risk.chatHistory || [];
     setRiskChatMessages(history);
+    setCurrentStep(1);
+    setCompletedSteps([]);
+    setRiskUpdates({});
+    setSuggestedUpdates(null);
     
     // If we already have history, don't trigger initial AI message
     if (history.length > 0) return;
 
     setRiskChatLoading(true);
     try {
-      const systemPrompt = `You are an expert risk mitigation specialist. Your role is to help the user develop a comprehensive, detailed mitigation plan for this specific risk and guide them step-by-step through the resolution process.\n\nRISK DETAILS:\n- Title: ${risk.title}\n- Description: ${risk.description}\n- Current Likelihood: ${risk.likelihood}/5\n- Current Impact: ${risk.impact}/5\n- Current Mitigation: ${risk.mitigation || "Not yet defined"}\n- Status: ${risk.status || "identified"}\n\nYOUR ROLE:\n1. Ask clarifying questions to understand the context better\n2. Provide 5-7 detailed, actionable mitigation tips specific to this risk\n3. For each tip: explain implementation steps and expected outcomes\n4. Help refine the mitigation strategy through conversation\n5. Suggest realistic updates to likelihood and impact as they implement solutions\n6. Define specific metrics or KPIs to track effectiveness\n7. Guide them through each step of the implementation\n\nFOCUS: Keep conversation ONLY about this specific risk. Provide practical, implementable guidance. As the user reports progress, help them update the risk assessment.`;
+      const systemPrompt = `You are an expert risk mitigation specialist. Your role is to guide the user STEP-BY-STEP through resolving this specific risk. DO NOT provide all solutions at once.\n\nRISK DETAILS:\n- Title: ${risk.title}\n- Description: ${risk.description}\n- Current Likelihood: ${risk.likelihood}/5\n- Current Impact: ${risk.impact}/5\n- Current Mitigation: ${risk.mitigation || "Not yet defined"}\n- Status: ${risk.status || "identified"}\n\nYOUR APPROACH - FOLLOW STRICTLY:\n1. STEP 1: Ask clarifying questions to understand the root cause\n2. STEP 2: Help them identify key stakeholders and dependencies\n3. STEP 3: Define success criteria and measurable outcomes\n4. STEP 4: Create a specific action plan with timeline\n5. STEP 5: Guide implementation and track progress\n\nIMPORTANT RULES:\n- Focus on ONE step at a time - do NOT skip ahead\n- When they complete a step, acknowledge it and ask if they're ready for the next\n- When they report fixes or actions taken, suggest specific likelihood/impact updates\n- Format score suggestions as: \"Based on your progress, I suggest: Likelihood: X/5, Impact: Y/5\"\n- Keep responses focused, concise, and actionable\n- Track their progress through the 5-step process\n\nCurrent Step: 1 (Understanding the root cause)`;
       
       // Use buildGeminiRequestBody with isInterview=false to avoid interview-specific instructions
       const body = buildGeminiRequestBody(systemPrompt, [], false);
@@ -3314,22 +3322,29 @@ function RisksView({ t, project, onUpdate, colorMode }) {
     setRiskChatMessages(newMessages);
     setRiskChatLoading(true);
     try {
-      const systemPrompt = `You are an expert risk mitigation specialist helping to refine the mitigation plan for this risk: ${riskMitigationChat.title}. 
+      const systemPrompt = `You are an expert risk mitigation specialist guiding the user STEP-BY-STEP through resolving this risk: ${riskMitigationChat.title}.
       
 Current Status:
 - Likelihood: ${riskMitigationChat.likelihood}/5
 - Impact: ${riskMitigationChat.impact}/5
 - Risk Score: ${riskMitigationChat.risk_score}
 - Status: ${riskMitigationChat.status}
+- Current Step: ${currentStep}/5
+- Completed Steps: ${completedSteps.join(", ") || "None yet"}
 
-As the user reports progress and implements mitigation steps, help them:
-1. Understand the effectiveness of their actions
-2. Identify what's working and what needs adjustment
-3. Suggest updates to the likelihood and impact scores based on their progress
-4. Provide next steps and guidance
-5. Track their progress toward resolution
+Step Definitions:
+1. STEP 1: Understand root cause - Ask clarifying questions
+2. STEP 2: Identify stakeholders - Who needs to be involved?
+3. STEP 3: Define success criteria - What does success look like?
+4. STEP 4: Create action plan - Specific timeline and tasks
+5. STEP 5: Track implementation - Monitor progress and adjust
 
-Keep responses focused on this specific risk and practical, actionable guidance.`;
+Your Rules:
+- Keep focus on the CURRENT step only
+- When user completes a step, acknowledge it and move to the next
+- When they report actions/fixes, suggest score updates in format: "Likelihood: X/5, Impact: Y/5"
+- Be concise and actionable
+- Track their progress through all 5 steps`;
       const thread = newMessages.map(m => ({
         role: m.role === "user" ? "user" : "ai",
         content: m.content
@@ -3338,11 +3353,26 @@ Keep responses focused on this specific risk and practical, actionable guidance.
       const { res, data } = await geminiGenerateWithModels(body);
       if (!res?.ok) throw new Error("Failed to get response");
       const text = geminiResponseText(data);
+      
+      const likelihoodMatch = text.match(/Likelihood:\s*(\d+)/);
+      const impactMatch = text.match(/Impact:\s*(\d+)/);
+      if (likelihoodMatch || impactMatch) {
+        setSuggestedUpdates({
+          likelihood: likelihoodMatch ? parseInt(likelihoodMatch[1]) : null,
+          impact: impactMatch ? parseInt(impactMatch[1]) : null
+        });
+      }
+      
+      const stepCompletionKeywords = ["great", "excellent", "perfect", "step", "next", "ready", "completed"];
+      if (stepCompletionKeywords.some(kw => text.toLowerCase().includes(kw)) && currentStep < 5) {
+        setCurrentStep(currentStep + 1);
+        setCompletedSteps([...completedSteps, currentStep]);
+      }
+      
       const aiMsg = { role: "ai", content: text };
       const finalMessages = [...newMessages, aiMsg];
       setRiskChatMessages(finalMessages);
       
-      // Save history to project
       const updatedRisks = risks.map(r => r.id === riskMitigationChat.id ? { ...r, chatHistory: finalMessages } : r);
       onUpdate({ ...project, risks: updatedRisks });
     } catch (e) {
@@ -3666,25 +3696,59 @@ Keep responses focused on this specific risk and practical, actionable guidance.
               <div style={{ flex: "0 0 55%", display: "flex", flexDirection: "column", minHeight: 0 }}>
                 <div style={{ fontSize: 14, fontWeight: 700, color: "var(--ps-text)", marginBottom: 12 }}>AI Risk Agent - Live Mitigation Guidance</div>
                 
-                {/* Live Roadmap */}
-                <div style={{ fontSize: 12, fontWeight: 600, color: "var(--ps-text-muted)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 8 }}>Progress Roadmap</div>
+                {/* Step-Specific Roadmap */}
+                <div style={{ fontSize: 12, fontWeight: 600, color: "var(--ps-text-muted)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 8 }}>Current Step Roadmap</div>
+                <div style={{ marginBottom: 16, padding: "12px", background: "var(--ps-panel)", borderRadius: 8, border: "1px solid var(--ps-border-subtle)", fontSize: 12 }}>
+                  {[
+                    { step: 1, title: "Understand Root Cause", desc: "Ask clarifying questions" },
+                    { step: 2, title: "Identify Stakeholders", desc: "Who needs to be involved?" },
+                    { step: 3, title: "Define Success Criteria", desc: "What does success look like?" },
+                    { step: 4, title: "Create Action Plan", desc: "Specific timeline and tasks" },
+                    { step: 5, title: "Track Implementation", desc: "Monitor progress and adjust" }
+                  ].map((item, idx) => {
+                    const isCompleted = completedSteps.includes(item.step);
+                    const isCurrent = currentStep === item.step;
+                    return (
+                      <div key={idx} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: idx < 4 ? 8 : 0, opacity: isCurrent || isCompleted ? 1 : 0.5 }}>
+                        <div style={{
+                          width: 24,
+                          height: 24,
+                          borderRadius: "50%",
+                          background: isCompleted ? "#22C55E" : isCurrent ? "#5B5BFF" : "#ccc",
+                          color: "#fff",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: 12,
+                          fontWeight: 700
+                        }}>
+                          {isCompleted ? "✓" : item.step}
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: isCurrent ? 600 : 400 }}>{item.title}</div>
+                          <div style={{ fontSize: 11, color: "var(--ps-text-muted)" }}>{item.desc}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                {/* Overall Progress */}
+                <div style={{ fontSize: 12, fontWeight: 600, color: "var(--ps-text-muted)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 8 }}>Overall Progress</div>
                 <div style={{ marginBottom: 16, padding: "12px", background: "var(--ps-panel)", borderRadius: 8, border: "1px solid var(--ps-border-subtle)", fontSize: 12 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                    <div style={{ width: 24, height: 24, borderRadius: "50%", background: "#5B5BFF", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700 }}>1</div>
-                    <div>Assess current state</div>
+                    <div style={{ width: "100%", height: 8, background: "#ccc", borderRadius: 4, overflow: "hidden" }}>
+                      <div style={{ width: `${(completedSteps.length / 5) * 100}%`, height: "100%", background: "#5B5BFF", transition: "width 0.3s ease" }}></div>
+                    </div>
+                    <div style={{ fontWeight: 600 }}>{completedSteps.length}/5</div>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                    <div style={{ width: 24, height: 24, borderRadius: "50%", background: "#EF9F27", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700 }}>2</div>
-                    <div>Plan mitigation strategy</div>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                    <div style={{ width: 24, height: 24, borderRadius: "50%", background: "#ccc", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700 }}>3</div>
-                    <div>Execute mitigation plan</div>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{ width: 24, height: 24, borderRadius: "50%", background: "#ccc", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700 }}>4</div>
-                    <div>Monitor & verify results</div>
-                  </div>
+                  {suggestedUpdates && (
+                    <div style={{ padding: "8px", background: "rgba(34, 197, 94, 0.1)", borderRadius: 4, border: "1px solid #22C55E", fontSize: 11, marginTop: 8 }}>
+                      <strong>Suggested Score Updates:</strong>
+                      {suggestedUpdates.likelihood && <div>Likelihood: {suggestedUpdates.likelihood}/5</div>}
+                      {suggestedUpdates.impact && <div>Impact: {suggestedUpdates.impact}/5</div>}
+                    </div>
+                  )}
                 </div>
                 
                 {/* Chat Area */}
@@ -3710,6 +3774,24 @@ Keep responses focused on this specific risk and practical, actionable guidance.
                   ))}
                   {riskChatLoading && <div style={{ fontSize: 11, color: "var(--ps-text-muted)", fontStyle: "italic" }}>AI is thinking...</div>}
                 </div>
+                
+                {/* Apply Suggested Updates */}
+                {suggestedUpdates && (suggestedUpdates.likelihood || suggestedUpdates.impact) && (
+                  <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+                    <button className="btn-primary" onClick={() => {
+                      if (suggestedUpdates.likelihood || suggestedUpdates.impact) {
+                        updateRisk(riskMitigationChat.id, {
+                          likelihood: suggestedUpdates.likelihood || riskMitigationChat.likelihood,
+                          impact: suggestedUpdates.impact || riskMitigationChat.impact,
+                          risk_score: ((suggestedUpdates.likelihood || riskMitigationChat.likelihood) * (suggestedUpdates.impact || riskMitigationChat.impact)) / 5
+                        });
+                        setSuggestedUpdates(null);
+                      }
+                    }} style={{ flex: 1, fontSize: 12, padding: "8px 12px" }}>
+                      Apply Updates
+                    </button>
+                  </div>
+                )}
                 
                 <div style={{ display: "flex", gap: 8 }}>
                   <input
