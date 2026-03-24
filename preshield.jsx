@@ -1844,11 +1844,23 @@ function PreShieldApp({ session, onSignOut }) {
     const params = new URLSearchParams(window.location.search);
     const token = params.get("invite");
     if (token) {
-      sb.getInviteByToken(token).then(invite => {
-        if (invite) setJoinModal({ token, projectName: invite.project_name || "a project", projectId: invite.project_id });
+      sb.getInviteByToken(token).then(async invite => {
+        if (!invite) return;
+        if (session?.access_token) {
+          try {
+            await sb.acceptInvite(session.access_token, token);
+            const updated = await sb.getProjects(session.access_token);
+            setProjects(updated);
+            window.history.replaceState({}, document.title, window.location.pathname);
+          } catch (e) {
+            setJoinModal({ token, projectName: invite.project_name || "a project", projectId: invite.project_id });
+          }
+        } else {
+          setJoinModal({ token, projectName: invite.project_name || "a project", projectId: invite.project_id });
+        }
       });
     }
-  }, []);
+  }, [session?.access_token]);
 
   const deleteProject = async (id) => {
     setProjects(prev => prev.filter(p => p.id !== id));
@@ -3332,7 +3344,7 @@ function clampLikertInput(v) {
 function mitigationToDetailedSteps(text) {
   const raw = String(text || "").trim();
   if (!raw) return "—";
-  if (/step\s*\d+[:.)-]/i.test(raw) || /\n[-*]\s+/.test(raw) || /\n\d+[.)]\s+/.test(raw)) return raw;
+  if (/step\s*\d+[:.-]/i.test(raw) || /\n[-*]\s+/.test(raw) || /\n\d+[.]\s+/.test(raw)) return raw;
   const parts = raw
     .split(/[.;]\s+/)
     .map((p) => p.trim())
