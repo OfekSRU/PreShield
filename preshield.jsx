@@ -3264,7 +3264,7 @@ function RisksView({ t, project, onUpdate, colorMode }) {
 
     setRiskChatLoading(true);
     try {
-      const systemPrompt = `You are an expert risk mitigation specialist. Your role is to help develop a comprehensive, detailed mitigation plan for this specific risk.\n\nRISK DETAILS:\n- Title: ${risk.title}\n- Description: ${risk.description}\n- Current Likelihood: ${risk.likelihood}/5\n- Current Impact: ${risk.impact}/5\n- Current Mitigation: ${risk.mitigation || "Not yet defined"}\n- Status: ${risk.status || "identified"}\n\nPROVIDE:\n1. 5-7 detailed, actionable mitigation tips specific to this risk\n2. For each tip: implementation steps and expected outcomes\n3. Clarifying questions to understand project context\n4. Refined mitigation strategy through conversation\n5. Realistic updates to likelihood and impact\n6. Specific metrics or KPIs to track effectiveness\n\nFOCUS: Keep conversation ONLY about this specific risk. Provide practical, implementable guidance.`;
+      const systemPrompt = `You are an expert risk mitigation specialist. Your role is to help the user develop a comprehensive, detailed mitigation plan for this specific risk and guide them step-by-step through the resolution process.\n\nRISK DETAILS:\n- Title: ${risk.title}\n- Description: ${risk.description}\n- Current Likelihood: ${risk.likelihood}/5\n- Current Impact: ${risk.impact}/5\n- Current Mitigation: ${risk.mitigation || "Not yet defined"}\n- Status: ${risk.status || "identified"}\n\nYOUR ROLE:\n1. Ask clarifying questions to understand the context better\n2. Provide 5-7 detailed, actionable mitigation tips specific to this risk\n3. For each tip: explain implementation steps and expected outcomes\n4. Help refine the mitigation strategy through conversation\n5. Suggest realistic updates to likelihood and impact as they implement solutions\n6. Define specific metrics or KPIs to track effectiveness\n7. Guide them through each step of the implementation\n\nFOCUS: Keep conversation ONLY about this specific risk. Provide practical, implementable guidance. As the user reports progress, help them update the risk assessment.`;
       
       // Use buildGeminiRequestBody with isInterview=false to avoid interview-specific instructions
       const body = buildGeminiRequestBody(systemPrompt, [], false);
@@ -3291,7 +3291,22 @@ function RisksView({ t, project, onUpdate, colorMode }) {
     setRiskChatMessages(newMessages);
     setRiskChatLoading(true);
     try {
-      const systemPrompt = `You are an expert risk mitigation specialist helping to refine the mitigation plan for this risk: ${riskMitigationChat.title}. Continue the conversation and help develop practical, actionable mitigation strategies. Keep responses focused on this specific risk.`;
+      const systemPrompt = `You are an expert risk mitigation specialist helping to refine the mitigation plan for this risk: ${riskMitigationChat.title}. 
+      
+Current Status:
+- Likelihood: ${riskMitigationChat.likelihood}/5
+- Impact: ${riskMitigationChat.impact}/5
+- Risk Score: ${riskMitigationChat.risk_score}
+- Status: ${riskMitigationChat.status}
+
+As the user reports progress and implements mitigation steps, help them:
+1. Understand the effectiveness of their actions
+2. Identify what's working and what needs adjustment
+3. Suggest updates to the likelihood and impact scores based on their progress
+4. Provide next steps and guidance
+5. Track their progress toward resolution
+
+Keep responses focused on this specific risk and practical, actionable guidance.`;
       const thread = newMessages.map(m => ({
         role: m.role === "user" ? "user" : "ai",
         content: m.content
@@ -3567,64 +3582,147 @@ function RisksView({ t, project, onUpdate, colorMode }) {
       
       {riskMitigationChat && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
-          <div className="card fade-in" style={{ padding: 24, maxWidth: 600, width: "90%", margin: 16, maxHeight: "80vh", display: "flex", flexDirection: "column" }}>
+          <div className="card fade-in" style={{ padding: 24, maxWidth: "90vw", width: "1400px", margin: 16, maxHeight: "90vh", display: "flex", flexDirection: "column" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-              <div style={{ fontWeight: 700, fontSize: 16 }}>📋 Risk Mitigation</div>
+              <div style={{ fontWeight: 700, fontSize: 18 }}>📋 Detailed Risk Report & Mitigation</div>
               <button type="button" className="btn-ghost" onClick={closeRiskMitigationChat} style={{ padding: "4px 8px" }}>✕</button>
             </div>
-            <div style={{ fontSize: 13, color: "var(--ps-text-muted)", marginBottom: 12 }}><strong>{riskMitigationChat.title}</strong></div>
-            <div style={{ flex: 1, overflowY: "auto", marginBottom: 16, display: "flex", flexDirection: "column", gap: 12, padding: "8px 0" }}>
-              {riskChatMessages.map((msg, i) => (
-                <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
-                  <div style={{
-                    maxWidth: "80%",
-                    padding: "12px 16px",
-                    borderRadius: msg.role === "user" ? "12px 12px 2px 12px" : "12px 12px 12px 2px",
-                    background: msg.role === "user" ? "#5B5BFF" : "var(--ps-chat-ai-bg)",
-                    border: msg.role === "ai" ? "1px solid var(--ps-border-subtle)" : "none",
-                    fontSize: 13,
-                    lineHeight: 1.6,
-                    color: msg.role === "user" ? "#fff" : "var(--ps-text)",
-                    whiteSpace: "pre-wrap",
-                    wordBreak: "break-word"
-                  }}>
-                    {msg.content}
+            
+            {/* Split Panel Layout */}
+            <div style={{ display: "flex", gap: 20, flex: 1, minHeight: 0 }}>
+              {/* Left Panel: Detailed Report */}
+              <div style={{ flex: "0 0 45%", display: "flex", flexDirection: "column", borderRight: "1px solid var(--ps-border-subtle)", paddingRight: 16, overflowY: "auto" }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "var(--ps-text)", marginBottom: 12 }}>Risk Details</div>
+                <div style={{ fontSize: 13, color: "var(--ps-text-muted)", marginBottom: 4 }}><strong>Title:</strong></div>
+                <div style={{ fontSize: 14, color: "var(--ps-text)", marginBottom: 16, fontWeight: 600 }}>{riskMitigationChat.title}</div>
+                
+                <div style={{ fontSize: 13, color: "var(--ps-text-muted)", marginBottom: 4 }}><strong>Description:</strong></div>
+                <div style={{ fontSize: 13, color: "var(--ps-quote-text)", marginBottom: 16, lineHeight: 1.6 }}>{riskMitigationChat.description}</div>
+                
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+                  <div>
+                    <div style={{ fontSize: 11, color: "var(--ps-text-muted)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>Likelihood</div>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: "var(--ps-text)", fontFamily: "'DM Mono', monospace" }}>{parseFloat(riskMitigationChat.likelihood).toFixed(1)}/5</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 11, color: "var(--ps-text-muted)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>Impact</div>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: "var(--ps-text)", fontFamily: "'DM Mono', monospace" }}>{parseFloat(riskMitigationChat.impact).toFixed(1)}/5</div>
                   </div>
                 </div>
-              ))}
-              {riskChatLoading && <div style={{ fontSize: 12, color: "var(--ps-text-muted)", fontStyle: "italic" }}>Thinking...</div>}
+                
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+                  <div>
+                    <div style={{ fontSize: 11, color: "var(--ps-text-muted)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>Risk Score</div>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: getRiskColor(riskMitigationChat.risk_score), fontFamily: "'DM Mono', monospace" }}>{parseFloat(riskMitigationChat.risk_score).toFixed(1)}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 11, color: "var(--ps-text-muted)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>Status</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "var(--ps-text)" }}>{riskMitigationChat.status}</div>
+                  </div>
+                </div>
+                
+                <div style={{ fontSize: 13, color: "var(--ps-text-muted)", marginBottom: 4 }}><strong>Current Mitigation Plan:</strong></div>
+                <div style={{ fontSize: 13, color: "var(--ps-quote-text)", marginBottom: 16, lineHeight: 1.6, whiteSpace: "pre-wrap", padding: "12px", background: "var(--ps-panel)", borderRadius: 6, border: "1px solid var(--ps-border-subtle)" }}>
+                  {mitigationToDetailedSteps(riskMitigationChat.mitigation)}
+                </div>
+                
+                <div style={{ fontSize: 13, color: "var(--ps-text-muted)", marginBottom: 4 }}><strong>Step-by-Step Action Plan:</strong></div>
+                <div style={{ fontSize: 13, color: "var(--ps-quote-text)", lineHeight: 1.8, padding: "12px", background: "var(--ps-panel)", borderRadius: 6, border: "1px solid var(--ps-border-subtle)" }}>
+                  <ol style={{ marginLeft: 20, color: "var(--ps-text)" }}>
+                    <li>Understand the root cause of this risk</li>
+                    <li>Identify stakeholders who need to be involved</li>
+                    <li>Define measurable success criteria</li>
+                    <li>Create a timeline for mitigation activities</li>
+                    <li>Assign ownership and accountability</li>
+                    <li>Monitor progress and adjust as needed</li>
+                  </ol>
+                </div>
+              </div>
+              
+              {/* Right Panel: AI Risk Agent */}
+              <div style={{ flex: "0 0 55%", display: "flex", flexDirection: "column", minHeight: 0 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "var(--ps-text)", marginBottom: 12 }}>AI Risk Agent - Live Mitigation Guidance</div>
+                
+                {/* Live Roadmap */}
+                <div style={{ fontSize: 12, fontWeight: 600, color: "var(--ps-text-muted)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 8 }}>Progress Roadmap</div>
+                <div style={{ marginBottom: 16, padding: "12px", background: "var(--ps-panel)", borderRadius: 8, border: "1px solid var(--ps-border-subtle)", fontSize: 12 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                    <div style={{ width: 24, height: 24, borderRadius: "50%", background: "#5B5BFF", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700 }}>1</div>
+                    <div>Assess current state</div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                    <div style={{ width: 24, height: 24, borderRadius: "50%", background: "#EF9F27", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700 }}>2</div>
+                    <div>Plan mitigation strategy</div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                    <div style={{ width: 24, height: 24, borderRadius: "50%", background: "#ccc", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700 }}>3</div>
+                    <div>Execute mitigation plan</div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ width: 24, height: 24, borderRadius: "50%", background: "#ccc", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700 }}>4</div>
+                    <div>Monitor & verify results</div>
+                  </div>
+                </div>
+                
+                {/* Chat Area */}
+                <div style={{ fontSize: 12, fontWeight: 600, color: "var(--ps-text-muted)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 8 }}>Agent Conversation</div>
+                <div style={{ flex: 1, overflowY: "auto", marginBottom: 12, display: "flex", flexDirection: "column", gap: 10, padding: "8px", background: "var(--ps-panel)", borderRadius: 8, border: "1px solid var(--ps-border-subtle)" }}>
+                  {riskChatMessages.map((msg, i) => (
+                    <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
+                      <div style={{
+                        maxWidth: "85%",
+                        padding: "10px 14px",
+                        borderRadius: msg.role === "user" ? "12px 12px 2px 12px" : "12px 12px 12px 2px",
+                        background: msg.role === "user" ? "#5B5BFF" : "var(--ps-chat-ai-bg)",
+                        border: msg.role === "ai" ? "1px solid var(--ps-border-subtle)" : "none",
+                        fontSize: 12,
+                        lineHeight: 1.5,
+                        color: msg.role === "user" ? "#fff" : "var(--ps-text)",
+                        whiteSpace: "pre-wrap",
+                        wordBreak: "break-word"
+                      }}>
+                        {msg.content}
+                      </div>
+                    </div>
+                  ))}
+                  {riskChatLoading && <div style={{ fontSize: 11, color: "var(--ps-text-muted)", fontStyle: "italic" }}>AI is thinking...</div>}
+                </div>
+                
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input
+                    type="text"
+                    placeholder="Report your progress to the AI agent..."
+                    onKeyDown={e => {
+                      if (e.key === "Enter" && !riskChatLoading) {
+                        sendRiskChatMessage(e.target.value);
+                        e.target.value = "";
+                      }
+                    }}
+                    style={{ flex: 1 }}
+                    disabled={riskChatLoading}
+                  />
+                  <button className="btn-primary" onClick={e => {
+                    const input = e.target.parentElement.querySelector("input");
+                    sendRiskChatMessage(input.value);
+                    input.value = "";
+                  }} disabled={riskChatLoading} style={{ flexShrink: 0 }}>
+                    Send
+                  </button>
+                </div>
+              </div>
             </div>
-            <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-              <input
-                type="text"
-                placeholder="Type your response..."
-                onKeyDown={e => {
-                  if (e.key === "Enter" && !riskChatLoading) {
-                    sendRiskChatMessage(e.target.value);
-                    e.target.value = "";
-                  }
-                }}
-                style={{ flex: 1 }}
-                disabled={riskChatLoading}
-              />
-              <button className="btn-primary" onClick={e => {
-                const input = e.target.parentElement.querySelector("input");
-                sendRiskChatMessage(input.value);
-                input.value = "";
-              }} disabled={riskChatLoading}>
-                Send
-              </button>
-            </div>
-            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", flexWrap: "wrap" }}>
+            
+            {/* Bottom Export & Action Bar */}
+            <div style={{ display: "flex", gap: 12, justifyContent: "flex-end", flexWrap: "wrap", marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--ps-border-subtle)" }}>
               <select onChange={(e) => { if (e.target.value) exportRiskReport(e.target.value); e.target.value = ''; }} style={{ padding: "8px 12px", fontSize: 12, borderRadius: 6, border: "1px solid var(--ps-border-subtle)", background: "var(--ps-card-bg)", color: "var(--ps-text)" }}>
-                <option value="">📥 Export as...</option>
+                <option value="">📥 Export Report & Roadmap as...</option>
                 <option value="html">HTML</option>
                 <option value="pdf">PDF</option>
                 <option value="word">Word (.docx)</option>
                 <option value="pptx">PowerPoint (.pptx)</option>
               </select>
               <button className="btn-ghost" onClick={closeRiskMitigationChat} style={{ fontSize: 12, padding: "8px 12px" }}>
-                Done
+                Close
               </button>
             </div>
           </div>
