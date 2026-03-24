@@ -3259,6 +3259,7 @@ function RisksView({ t, project, onUpdate, colorMode }) {
   const [riskMitigationChat, setRiskMitigationChat] = useState(null);
   const [riskChatMessages, setRiskChatMessages] = useState([]);
   const [riskChatLoading, setRiskChatLoading] = useState(false);
+  const riskChatInputRef = React.useRef(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [completedSteps, setCompletedSteps] = useState([]);
   const [riskUpdates, setRiskUpdates] = useState({});
@@ -3367,6 +3368,10 @@ function RisksView({ t, project, onUpdate, colorMode }) {
     setRiskChatMessages(newMessages);
     setRiskChatLoading(true);
     try {
+      console.log("=== Risk Chat Message ===");
+      console.log("User message:", userMessage);
+      console.log("Current step:", currentStep);
+      console.log("Risk:", riskMitigationChat?.title);
       // Build a more intelligent system prompt that includes conversation history context
       const recentHistory = newMessages.slice(-6).map(m => `${m.role === "user" ? "User" : "Agent"}: ${m.content}`).join("\n");
       const systemPrompt = `You are an expert risk mitigation specialist guiding the user STEP-BY-STEP through resolving this risk: ${riskMitigationChat.title}.
@@ -3403,9 +3408,13 @@ Your Rules:
         content: m.content
       }));
       const body = buildGeminiRequestBody(systemPrompt, thread, false);
+      console.log("Request body:", body);
       const { res, data } = await geminiGenerateWithModels(body);
+      console.log("Response status:", res?.status);
+      console.log("Response data:", data);
       if (!res?.ok) throw new Error("Failed to get response");
       const text = geminiResponseText(data);
+      console.log("AI Response text:", text);
       
       if (!text || !text.trim()) {
         throw new Error("Empty response from AI");
@@ -3754,66 +3763,11 @@ Your Rules:
               
               {/* Right Panel: AI Risk Agent */}
               <div style={{ flex: "0 0 55%", display: "flex", flexDirection: "column", minHeight: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: "var(--ps-text)", marginBottom: 12 }}>AI Risk Agent - Live Mitigation Guidance</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "var(--ps-text)", marginBottom: 12 }}>🤖 AI Risk Agent</div>
                 
-                {/* Step-Specific Roadmap */}
-                <div style={{ fontSize: 12, fontWeight: 600, color: "var(--ps-text-muted)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 8 }}>Current Step Roadmap</div>
-                <div style={{ marginBottom: 16, padding: "12px", background: "var(--ps-panel)", borderRadius: 8, border: "1px solid var(--ps-border-subtle)", fontSize: 12 }}>
-                  {[
-                    { step: 1, title: "Understand Root Cause", desc: "Ask clarifying questions" },
-                    { step: 2, title: "Identify Stakeholders", desc: "Who needs to be involved?" },
-                    { step: 3, title: "Define Success Criteria", desc: "What does success look like?" },
-                    { step: 4, title: "Create Action Plan", desc: "Specific timeline and tasks" },
-                    { step: 5, title: "Track Implementation", desc: "Monitor progress and adjust" }
-                  ].map((item, idx) => {
-                    const isCompleted = completedSteps.includes(item.step);
-                    const isCurrent = currentStep === item.step;
-                    return (
-                      <div key={idx} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: idx < 4 ? 8 : 0, opacity: isCurrent || isCompleted ? 1 : 0.5 }}>
-                        <div style={{
-                          width: 24,
-                          height: 24,
-                          borderRadius: "50%",
-                          background: isCompleted ? "#22C55E" : isCurrent ? "#5B5BFF" : "#ccc",
-                          color: "#fff",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: 12,
-                          fontWeight: 700
-                        }}>
-                          {isCompleted ? "✓" : item.step}
-                        </div>
-                        <div>
-                          <div style={{ fontWeight: isCurrent ? 600 : 400 }}>{item.title}</div>
-                          <div style={{ fontSize: 11, color: "var(--ps-text-muted)" }}>{item.desc}</div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-                
-                {/* Overall Progress */}
-                <div style={{ fontSize: 12, fontWeight: 600, color: "var(--ps-text-muted)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 8 }}>Overall Progress</div>
-                <div style={{ marginBottom: 16, padding: "12px", background: "var(--ps-panel)", borderRadius: 8, border: "1px solid var(--ps-border-subtle)", fontSize: 12 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                    <div style={{ width: "100%", height: 8, background: "#ccc", borderRadius: 4, overflow: "hidden" }}>
-                      <div style={{ width: `${(completedSteps.length / 5) * 100}%`, height: "100%", background: "#5B5BFF", transition: "width 0.3s ease" }}></div>
-                    </div>
-                    <div style={{ fontWeight: 600 }}>{completedSteps.length}/5</div>
-                  </div>
-                  {suggestedUpdates && (
-                    <div style={{ padding: "8px", background: "rgba(34, 197, 94, 0.1)", borderRadius: 4, border: "1px solid #22C55E", fontSize: 11, marginTop: 8 }}>
-                      <strong>Suggested Score Updates:</strong>
-                      {suggestedUpdates.likelihood && <div>Likelihood: {suggestedUpdates.likelihood}/5</div>}
-                      {suggestedUpdates.impact && <div>Impact: {suggestedUpdates.impact}/5</div>}
-                    </div>
-                  )}
-                </div>
-                
-                {/* Chat Area */}
-                <div style={{ fontSize: 12, fontWeight: 600, color: "var(--ps-text-muted)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 8 }}>Agent Conversation</div>
-                <div style={{ flex: 1, overflowY: "auto", marginBottom: 12, display: "flex", flexDirection: "column", gap: 10, padding: "8px", background: "var(--ps-panel)", borderRadius: 8, border: "1px solid var(--ps-border-subtle)" }}>
+                {/* Chat Area - MAIN FOCUS */}
+                <div style={{ fontSize: 12, fontWeight: 600, color: "var(--ps-text-muted)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 6 }}>Live Conversation</div>
+                <div style={{ flex: 1, overflowY: "auto", marginBottom: 12, display: "flex", flexDirection: "column", gap: 10, padding: "12px", background: "var(--ps-panel)", borderRadius: 8, border: "1px solid var(--ps-border-subtle)", minHeight: "400px" }}>
                   {riskChatMessages.map((msg, i) => (
                     <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
                       <div style={{
@@ -3832,29 +3786,13 @@ Your Rules:
                       </div>
                     </div>
                   ))}
-                  {riskChatLoading && <div style={{ fontSize: 11, color: "var(--ps-text-muted)", fontStyle: "italic" }}>AI is thinking...</div>}
+                  {riskChatLoading && <div style={{ fontSize: 11, color: "var(--ps-text-muted)", fontStyle: "italic" }}>🤖 AI is thinking...</div>}
                 </div>
                 
-                {/* Apply Suggested Updates */}
-                {suggestedUpdates && (suggestedUpdates.likelihood || suggestedUpdates.impact) && (
-                  <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-                    <button className="btn-primary" onClick={() => {
-                      if (suggestedUpdates.likelihood || suggestedUpdates.impact) {
-                        updateRisk(riskMitigationChat.id, {
-                          likelihood: suggestedUpdates.likelihood || riskMitigationChat.likelihood,
-                          impact: suggestedUpdates.impact || riskMitigationChat.impact,
-                          risk_score: ((suggestedUpdates.likelihood || riskMitigationChat.likelihood) * (suggestedUpdates.impact || riskMitigationChat.impact)) / 5
-                        });
-                        setSuggestedUpdates(null);
-                      }
-                    }} style={{ flex: 1, fontSize: 12, padding: "8px 12px" }}>
-                      Apply Updates
-                    </button>
-                  </div>
-                )}
-                
-                <div style={{ display: "flex", gap: 8 }}>
+                {/* Input Area */}
+                <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
                   <input
+                    ref={riskChatInputRef}
                     type="text"
                     placeholder="Report your progress to the AI agent..."
                     onKeyDown={e => {
@@ -3867,15 +3805,63 @@ Your Rules:
                     disabled={riskChatLoading}
                   />
                   <button className="btn-primary" onClick={e => {
-                    const input = e.target.parentElement.querySelector("input");
-                    sendRiskChatMessage(input.value);
-                    input.value = "";
+                    if (riskChatInputRef.current) {
+                      sendRiskChatMessage(riskChatInputRef.current.value);
+                      riskChatInputRef.current.value = "";
+                    }
                   }} disabled={riskChatLoading} style={{ flexShrink: 0 }}>
                     Send
                   </button>
                 </div>
-              </div>
-            </div>
+                
+                {/* Compact Progress & Roadmap */}
+                <div style={{ fontSize: 11, fontWeight: 600, color: "var(--ps-text-muted)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 6 }}>Progress</div>
+                <div style={{ padding: "8px 12px", background: "var(--ps-panel)", borderRadius: 6, border: "1px solid var(--ps-border-subtle)", fontSize: 11, marginBottom: 12 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                    <div style={{ width: "100%", height: 6, background: "#ccc", borderRadius: 3, overflow: "hidden" }}>
+                      <div style={{ width: `${(completedSteps.length / 5) * 100}%`, height: "100%", background: "#5B5BFF", transition: "width 0.3s ease" }}></div>
+                    </div>
+                    <div style={{ fontWeight: 600, whiteSpace: "nowrap" }}>Step {currentStep}/5</div>
+                  </div>
+                  <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                    {[1, 2, 3, 4, 5].map(step => (
+                      <div key={step} style={{
+                        width: 24,
+                        height: 24,
+                        borderRadius: "50%",
+                        background: completedSteps.includes(step) ? "#22C55E" : currentStep === step ? "#5B5BFF" : "#ccc",
+                        color: "#fff",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 10,
+                        fontWeight: 700,
+                        opacity: currentStep >= step || completedSteps.includes(step) ? 1 : 0.5
+                      }}>
+                        {completedSteps.includes(step) ? "✓" : step}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Suggested Updates */}
+                {suggestedUpdates && (suggestedUpdates.likelihood || suggestedUpdates.impact) && (
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button className="btn-primary" onClick={() => {
+                      if (suggestedUpdates.likelihood || suggestedUpdates.impact) {
+                        updateRisk(riskMitigationChat.id, {
+                          likelihood: suggestedUpdates.likelihood || riskMitigationChat.likelihood,
+                          impact: suggestedUpdates.impact || riskMitigationChat.impact,
+                          risk_score: ((suggestedUpdates.likelihood || riskMitigationChat.likelihood) * (suggestedUpdates.impact || riskMitigationChat.impact)) / 5
+                        });
+                        setSuggestedUpdates(null);
+                      }
+                    }} style={{ flex: 1, fontSize: 11, padding: "6px 10px" }}>
+                      Apply: L:{suggestedUpdates.likelihood || "?"} I:{suggestedUpdates.impact || "?"}
+                    </button>
+                  </div>
+                )}
+              </div>            </div>
             
             {/* Bottom Export & Action Bar */}
             <div style={{ display: "flex", gap: 12, justifyContent: "flex-end", flexWrap: "wrap", marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--ps-border-subtle)" }}>
