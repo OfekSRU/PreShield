@@ -393,9 +393,9 @@ function AuthScreen({ onAuth }) {
       onAuth(session);
     } catch (e) {
       if (e.message?.includes("fetch") || e.message?.includes("network") || e.message?.includes("Failed")) {
-        setError("Connection error. If you're using this inside an iframe, please open it in a new tab to sign in.");
+        setError(t.connectionErrorIframe || "Connection error. If you're using this inside an iframe, please open it in a new tab to sign in.");
       } else {
-        setError(e.message || "Something went wrong. Please try again.");
+        setError(e.message || (t.somethingWentWrong || "Something went wrong. Please try again."));
       }
     } finally {
       setLoading(false);
@@ -406,7 +406,7 @@ function AuthScreen({ onAuth }) {
     <div style={{ minHeight: "100vh", background: isDarkMode ? "#0A0A0F" : "#F5F5F5", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, fontFamily: "'DM Sans', 'Helvetica Neue', sans-serif", position: "relative" }}>
       {/* Language and Theme Controls */}
       <div style={{ position: "absolute", top: 20, right: 20, display: "flex", gap: 12, alignItems: "center" }}>
-        <button onClick={handleThemeToggle} style={{ background: isDarkMode ? "#2A2A3A" : "#E0E0E0", border: "1px solid " + (isDarkMode ? "#3A3A4A" : "#D0D0D0"), color: isDarkMode ? "#E8E6E0" : "#333", borderRadius: 6, padding: "6px 10px", fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }} title="Toggle dark/light mode">{isDarkMode ? "🌙" : "☀️"}</button>
+        <button onClick={handleThemeToggle} style={{ background: isDarkMode ? "#2A2A3A" : "#E0E0E0", border: "1px solid " + (isDarkMode ? "#3A3A4A" : "#D0D0D0"), color: isDarkMode ? "#E8E6E0" : "#333", borderRadius: 6, padding: "6px 10px", fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }} title={t.toggleDarkMode || "Toggle dark/light mode"}>{isDarkMode ? "🌙" : "☀️"}</button>
         <select value={language} onChange={(e) => handleLanguageChange(e.target.value)} style={{ background: isDarkMode ? "#2A2A3A" : "#E0E0E0", border: "1px solid " + (isDarkMode ? "#3A3A4A" : "#D0D0D0"), color: isDarkMode ? "#E8E6E0" : "#333", borderRadius: 6, padding: "6px 8px", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}><option value="EN">EN</option><option value="עב">עב</option><option value="ES">ES</option><option value="FR">FR</option><option value="DE">DE</option></select>
       </div>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap'); * { box-sizing: border-box; margin: 0; padding: 0; } input[type="email"], input[type="password"], input[type="text"] { background: #13131A; border: 1px solid #2A2A3A; color: #E8E6E0; border-radius: 8px; padding: 11px 14px; font-family: inherit; font-size: 14px; outline: none; width: 100%; transition: border-color 0.2s; } input:focus { border-color: #5B5BFF; } button { cursor: pointer; font-family: inherit; border: none; transition: all 0.15s; } .check-box { width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid #2A2A3A; background: #13131A; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; } .check-box.checked { background: #5B5BFF; border-color: #5B5BFF; }`}</style>
@@ -418,7 +418,7 @@ function AuthScreen({ onAuth }) {
             <svg width="24" height="24" viewBox="0 0 14 14" fill="none"><path d="M7 1L13 4V7C13 10.3 10.3 13 7 13C3.7 13 1 10.3 1 7V4L7 1Z" stroke="#fff" strokeWidth="1.5" fill="none"/><path d="M4.5 7L6.5 9L9.5 5.5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </div>
           <div style={{ fontSize: 22, fontWeight: 700, color: isDarkMode ? "#E8E6E0" : "#1A1A1A", letterSpacing: "-0.5px" }}>PreShield</div>
-          <div style={{ fontSize: 13, color: isDarkMode ? "#9A9898" : "#666666", marginTop: 4 }}>AI-powered pre-mortem risk assessment</div>
+          <div style={{ fontSize: 13, color: isDarkMode ? "#9A9898" : "#666666", marginTop: 4 }}>{t.tagline || "AI-powered pre-mortem risk assessment"}</div>
         </div>
 
         {/* Card */}
@@ -439,7 +439,7 @@ function AuthScreen({ onAuth }) {
               {/* Email */}
               <div>
                 <label style={{ fontSize: 12, color: isDarkMode ? "#9A9898" : "#666666", marginBottom: 6, display: "block" }}>{t.email}</label>
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@company.com" onKeyDown={e => e.key === "Enter" && submit()} autoFocus style={{ background: isDarkMode ? "#13131A" : "#F5F5F5", border: `1px solid ${isDarkMode ? "#2A2A3A" : "#D0D0D0"}`, color: isDarkMode ? "#E8E6E0" : "#1A1A1A" }} />
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder={t.emailPlaceholder || "you@company.com"} onKeyDown={e => e.key === "Enter" && submit()} autoFocus style={{ background: isDarkMode ? "#13131A" : "#F5F5F5", border: `1px solid ${isDarkMode ? "#2A2A3A" : "#D0D0D0"}`, color: isDarkMode ? "#E8E6E0" : "#1A1A1A" }} />
               </div>
 
               {/* Password */}
@@ -451,7 +451,7 @@ function AuthScreen({ onAuth }) {
                       type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={e => setPassword(e.target.value)}
-                      placeholder="••••••••"
+                      placeholder={t.passwordPlaceholder || "••••••••"}
                       onKeyDown={e => e.key === "Enter" && submit()}
                       style={{ paddingRight: 42, background: isDarkMode ? "#13131A" : "#F5F5F5", border: `1px solid ${isDarkMode ? "#2A2A3A" : "#D0D0D0"}`, color: isDarkMode ? "#E8E6E0" : "#1A1A1A" }}
                     />
