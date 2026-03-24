@@ -2820,11 +2820,60 @@ function ExportModal({ project, t, onClose }) {
         slide.addText(parseFloat(r.risk_score).toFixed(1), { x: 8.2, y: 2.8 + i * 0.45, w: 1.3, h: 0.35, fontSize: 12, bold: true, color: riskColor(r.risk_score), align: "right" });
       });
 
-      // Slide 3+: Individual risks (up to 6)
+      // Slide 3: Risk Matrix
+      slide = prs.addSlide();
+      slide.background = { color: "FFFFFF" };
+      slide.addText("03", { x: 0.5, y: 0.4, w: 0.8, h: 0.6, fontSize: 24, color: "CCCCCC", bold: true });
+      slide.addText("Risk Matrix", { x: 1.5, y: 0.5, w: 8, h: 0.5, fontSize: 28, bold: true });
+      
+      // Draw risk matrix grid
+      const matrixX = 0.8, matrixY = 1.2, cellSize = 0.7, gridSize = 5;
+      const matrixColors = [
+        ["#E8F5E9", "#E8F5E9", "#FFE9B5", "#FFE0B2", "#FFEBEE"],
+        ["#E8F5E9", "#FFE9B5", "#FFE0B2", "#FFE0B2", "#FFEBEE"],
+        ["#FFE9B5", "#FFE0B2", "#FFE0B2", "#FFEBEE", "#FFEBEE"],
+        ["#FFE0B2", "#FFE0B2", "#FFEBEE", "#FFEBEE", "#FFEBEE"],
+        ["#FFEBEE", "#FFEBEE", "#FFEBEE", "#FFEBEE", "#FFEBEE"]
+      ];
+      
+      // Draw grid cells and background colors
+      for (let i = 0; i < gridSize; i++) {
+        for (let j = 0; j < gridSize; j++) {
+          const x = matrixX + j * cellSize;
+          const y = matrixY + i * cellSize;
+          slide.addShape(prs.ShapeType.rect, {
+            x, y, w: cellSize, h: cellSize,
+            fill: { color: matrixColors[i][j].replace('#', '') },
+            line: { color: "CCCCCC", width: 1 }
+          });
+        }
+      }
+      
+      // Add axis labels
+      slide.addText("Likelihood →", { x: matrixX + 0.5, y: matrixY + gridSize * cellSize + 0.1, w: 3, h: 0.25, fontSize: 10, color: "666666" });
+      slide.addText("Impact ↑", { x: matrixX - 0.7, y: matrixY - 0.3, w: 1, h: 0.25, fontSize: 10, color: "666666" });
+      
+      // Plot risks on matrix
+      risks.forEach(r => {
+        const likelihood = Math.min(5, Math.max(1, Math.round(r.likelihood || 3)));
+        const impact = Math.min(5, Math.max(1, Math.round(r.impact || 3)));
+        const x = matrixX + (likelihood - 1) * cellSize + cellSize / 2 - 0.15;
+        const y = matrixY + (5 - impact) * cellSize + cellSize / 2 - 0.15;
+        
+        slide.addShape(prs.ShapeType.ellipse, {
+          x, y, w: 0.3, h: 0.3,
+          fill: { color: riskColor(r.risk_score) },
+          line: { color: "FFFFFF", width: 1 }
+        });
+      });
+      
+      slide.addText("Each circle represents one risk, colored by severity", { x: 0.5, y: 4.8, w: 9, h: 0.4, fontSize: 10, color: "888888", align: "center" });
+
+      // Slide 4+: Individual risks (up to 6)
       sorted.slice(0, 6).forEach((r, idx) => {
         slide = prs.addSlide();
         slide.background = { color: "FFFFFF" };
-        const riskNum = idx + 3;
+        const riskNum = idx + 4;
         slide.addText(String(riskNum).padStart(2, '0'), { x: 0.5, y: 0.4, w: 0.8, h: 0.6, fontSize: 24, color: riskColor(r.risk_score), bold: true });
         slide.addText(r.title, { x: 1.5, y: 0.5, w: 8, h: 0.5, fontSize: 28, bold: true, color: riskColor(r.risk_score) });
         
