@@ -3092,18 +3092,45 @@ function InterviewView({ t, project, onUpdate, lang }) {
   const messages = allMessages.filter(m => m.channel === "interview");
 
   // Re-translate past messages when language changes
-  const translatedMessages = useMemo(() => {
-    return messages.map(m => {
-      if (m.role === "ai") {
-        // If it contains the risks extraction marker, use the current translation for it
-        return {
-          ...m,
-          content: m.content.replace(/✅ Risks extracted and added to your report\.|✅ סיכונים חולצו והתווספו לדוח שלך\.|✅ Riesgos extraídos y añadidos a tu informe\.|✅ Risques extraits et ajoutés à votre rapport\.|✅ Risiken extrahiert und Ihrem Bericht hinzugefügt\./g, t.risksExtracted)
-        };
-      }
-      return m;
-    });
-  }, [messages, t.risksExtracted]);
+  const [translatedMessages, setTranslatedMessages] = useState(messages);
+  const [translatingHistory, setTranslatingHistory] = useState(false);
+  const lastLangRef = useRef(lang);
+
+  useEffect(() => {
+    if (lastLangRef.current !== lang && messages.length > 0) {
+      const translateHistory = async () => {
+        setTranslatingHistory(true);
+        try {
+          const historyText = messages.map(m => `${m.role === 'user' ? 'User' : 'AI'}: ${m.content}`).join('\n---\n');
+          const targetLangName = lang === "he" ? "Hebrew" : lang === "es" ? "Spanish" : lang === "fr" ? "French" : lang === "de" ? "German" : "English";
+          const prompt = `Translate the following chat history into ${targetLangName}. Keep the same format (Role: Content) and preserve the "---" separators. Do not add any extra commentary.\n\n${historyText}`;
+          
+          const body = buildGeminiRequestBody(prompt, [], false);
+          const { res, data } = await geminiGenerateWithModels(body);
+          if (res?.ok) {
+            const translatedText = geminiResponseText(data);
+            const translatedParts = translatedText.split('\n---\n');
+            const newTranslatedMessages = messages.map((m, i) => {
+              if (translatedParts[i]) {
+                const content = translatedParts[i].replace(/^(User|AI):\s*/i, '');
+                return { ...m, content };
+              }
+              return m;
+            });
+            setTranslatedMessages(newTranslatedMessages);
+          }
+        } catch (e) {
+          console.error("History translation failed:", e);
+        } finally {
+          setTranslatingHistory(false);
+          lastLangRef.current = lang;
+        }
+      };
+      translateHistory();
+    } else if (messages.length !== (translatedMessages?.length || 0)) {
+      setTranslatedMessages(messages);
+    }
+  }, [lang, messages]);
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
@@ -3325,6 +3352,42 @@ function RisksView({ t, project, onUpdate, colorMode }) {
   const [riskMitigationChat, setRiskMitigationChat] = useState(null);
   const [riskChatMessages, setRiskChatMessages] = useState([]);
   const [riskChatLoading, setRiskChatLoading] = useState(false);
+  const [translatedRiskMessages, setTranslatedRiskMessages] = useState([]);
+  const lastRiskLangRef = useRef(project.language);
+
+  useEffect(() => {
+    if (lastRiskLangRef.current !== project.language && riskChatMessages.length > 0) {
+      const translateRiskHistory = async () => {
+        try {
+          const historyText = riskChatMessages.map(m => `${m.role === 'user' ? 'User' : 'AI'}: ${m.content}`).join('\n---\n');
+          const targetLangName = project.language === "he" ? "Hebrew" : project.language === "es" ? "Spanish" : project.language === "fr" ? "French" : project.language === "de" ? "German" : "English";
+          const prompt = `Translate the following risk mitigation discussion into ${targetLangName}. Keep the same format (Role: Content) and preserve the "---" separators. Do not add any extra commentary.\n\n${historyText}`;
+          
+          const body = buildGeminiRequestBody(prompt, [], false);
+          const { res, data } = await geminiGenerateWithModels(body);
+          if (res?.ok) {
+            const translatedText = geminiResponseText(data);
+            const translatedParts = translatedText.split('\n---\n');
+            const newTranslatedMessages = riskChatMessages.map((m, i) => {
+              if (translatedParts[i]) {
+                const content = translatedParts[i].replace(/^(User|AI):\s*/i, '');
+                return { ...m, content };
+              }
+              return m;
+            });
+            setTranslatedRiskMessages(newTranslatedMessages);
+          }
+        } catch (e) {
+          console.error("Risk history translation failed:", e);
+        } finally {
+          lastRiskLangRef.current = project.language;
+        }
+      };
+      translateRiskHistory();
+    } else if (riskChatMessages.length !== (translatedRiskMessages?.length || 0)) {
+      setTranslatedRiskMessages(riskChatMessages);
+    }
+  }, [project.language, riskChatMessages]);
   const riskChatInputRef = React.useRef(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [completedSteps, setCompletedSteps] = useState([]);
@@ -3834,7 +3897,7 @@ Your Rules:
                 {/* Chat Area - MAIN FOCUS */}
                 <div style={{ fontSize: 12, fontWeight: 600, color: "var(--ps-text-muted)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 6 }}>Live Conversation</div>
                 <div style={{ flex: 1, overflowY: "auto", marginBottom: 12, display: "flex", flexDirection: "column", gap: 10, padding: "12px", background: "var(--ps-panel)", borderRadius: 8, border: "1px solid var(--ps-border-subtle)", minHeight: "400px" }}>
-                  {riskChatMessages.map((msg, i) => (
+                  {translatedRiskMessages.map((msg, i) => (
                     <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
                       <div style={{
                         maxWidth: "85%",
@@ -3842,7 +3905,7 @@ Your Rules:
                         borderRadius: msg.role === "user" ? "12px 12px 2px 12px" : "12px 12px 12px 2px",
                         background: msg.role === "user" ? "#5B5BFF" : "var(--ps-chat-ai-bg)",
                         border: msg.role === "ai" ? "1px solid var(--ps-border-subtle)" : "none",
-                        fontSize: 12,
+                        fontSize: 13,
                         lineHeight: 1.5,
                         color: msg.role === "user" ? "#fff" : "var(--ps-text)",
                         whiteSpace: "pre-wrap",
