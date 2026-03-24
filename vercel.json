@@ -1,0 +1,7 @@
+{
+  "buildCommand": "pnpm run build",
+  "outputDirectory": "dist",
+  "env": {
+    "SKIP_ENV_VALIDATION": "true"
+  }
+}
