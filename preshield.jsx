@@ -263,7 +263,6 @@ function validatePassword(password) {
   const checks = {
     length: password.length >= 6,
     number: /\d/.test(password),
-    upper: /[A-Z]/.test(password),
   };
   return checks;
 }
@@ -273,7 +272,6 @@ function PasswordStrength({ password, t }) {
   const items = [
     { label: t.passwordLength, ok: checks.length },
     { label: t.passwordNumber, ok: checks.number },
-    { label: t.passwordCapital, ok: checks.upper },
   ];
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 8 }}>
@@ -336,7 +334,7 @@ function AuthScreen({ onAuth }) {
   const t = translations[language] || translations.EN;
 
   const checks = validatePassword(password);
-  const passwordValid = checks.length && checks.number && checks.upper;
+  const passwordValid = checks.length && checks.number;
 
   const submit = async () => {
     if (!email.trim()) return;
@@ -521,12 +519,12 @@ function AuthScreen({ onAuth }) {
               {/* Submit */}
               <button
                 onClick={submit}
-                disabled={
+                disabled={{
                   loading ||
                   !email.trim() ||
                   (mode !== "reset" && !password) ||
-                  (mode === "register" && (!passwordValid || !businessName.trim() || !businessLocation.trim()))
-                }
+                  (mode === "register" && !passwordValid)
+                }}
                 style={{ background: "#5B5BFF", color: "#fff", borderRadius: 8, padding: "12px", fontSize: 14, fontWeight: 500, opacity: (loading || (mode === "register" && !passwordValid && password.length > 0)) ? 0.6 : 1, marginTop: 4 }}
               >
                 {loading ? t.loading : mode === "login" ? t.signIn : mode === "register" ? t.createAccount : t.sendResetLink}
