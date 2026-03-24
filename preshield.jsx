@@ -519,12 +519,7 @@ function AuthScreen({ onAuth }) {
               {/* Submit */}
               <button
                 onClick={submit}
-                disabled={{
-                  loading ||
-                  !email.trim() ||
-                  (mode !== "reset" && !password) ||
-                  (mode === "register" && !passwordValid)
-                }}
+                disabled={loading || !email.trim() || (mode !== "reset" && !password) || (mode === "register" && !passwordValid)}
                 style={{ background: "#5B5BFF", color: "#fff", borderRadius: 8, padding: "12px", fontSize: 14, fontWeight: 500, opacity: (loading || (mode === "register" && !passwordValid && password.length > 0)) ? 0.6 : 1, marginTop: 4 }}
               >
                 {loading ? t.loading : mode === "login" ? t.signIn : mode === "register" ? t.createAccount : t.sendResetLink}
