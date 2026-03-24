@@ -2727,8 +2727,7 @@ function ExportModal({ project, t, onClose }) {
         const wordHtml = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'><head><meta charset='utf-8'></head><body>${html}</body></html>`;
         download(wordHtml, `PreShield_${filename}.doc`, "application/msword");
       } else if (format === "pptx") {
-        const html = buildPPTXHtml(project, t);
-        download(html, `PreShield_${filename}_deck.html`, "text/html");
+        await generatePPTXFile(project, t, filename);
       }
     } finally {
       setExporting(null);
@@ -2743,11 +2742,91 @@ function ExportModal({ project, t, onClose }) {
     URL.revokeObjectURL(url);
   };
 
+  const generatePPTXFile = async (project, t, filename) => {
+    // Load PptxGenJS library dynamically
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js';
+    script.onload = () => {
+      const PptxGenJS = window.PptxGenJS;
+      const prs = new PptxGenJS();
+      prs.defineLayout({ name: 'LAYOUT1', width: 10, height: 5.625 });
+      prs.layout = 'LAYOUT1';
+
+      const risks = project.risks || [];
+      const sorted = [...risks].sort((a, b) => b.risk_score - a.risk_score);
+      const scoreColor = project.overall_risk_score >= 60 ? "E24B4A" : project.overall_risk_score >= 30 ? "EF9F27" : "1D9E75";
+      const riskColor = (s) => s >= 18 ? "E53935" : s >= 12 ? "F57C00" : s >= 6 ? "EF9F27" : "1D9E75";
+
+      // Slide 1: Title
+      let slide = prs.addSlide();
+      slide.background = { color: "FFFFFF" };
+      slide.addText("PreShield · Risk Assessment", { x: 0.5, y: 0.5, w: 9, h: 0.4, fontSize: 14, color: "888888", bold: true });
+      slide.addText(project.name, { x: 0.5, y: 1.0, w: 9, h: 0.8, fontSize: 44, bold: true, color: "111111" });
+      slide.addText(`${project.project_type?.replace(/_/g, " ")} · ${new Date().toLocaleDateString()}${project.deadline ? ` · Deadline: ${project.deadline}` : ""}`, { x: 0.5, y: 1.9, w: 9, h: 0.4, fontSize: 14, color: "666666" });
+      if (project.description) slide.addText(project.description, { x: 0.5, y: 2.4, w: 9, h: 1.0, fontSize: 12, color: "555555" });
+      
+      // Score box
+      slide.addShape(prs.ShapeType.rect, { x: 7.5, y: 1.0, w: 2.0, h: 1.2, fill: { color: scoreColor, transparency: 85 }, line: { color: scoreColor, width: 2 } });
+      slide.addText(parseFloat(project.overall_risk_score || 0).toFixed(1), { x: 7.5, y: 1.1, w: 2.0, h: 0.5, fontSize: 32, bold: true, color: scoreColor, align: "center" });
+      slide.addText("Risk Score", { x: 7.5, y: 1.6, w: 2.0, h: 0.3, fontSize: 10, color: "888888", align: "center" });
+
+      // Slide 2: Summary
+      slide = prs.addSlide();
+      slide.background = { color: "FFFFFF" };
+      slide.addText("02", { x: 0.5, y: 0.4, w: 0.8, h: 0.6, fontSize: 24, color: "CCCCCC", bold: true });
+      slide.addText("Risk Summary", { x: 1.5, y: 0.5, w: 8, h: 0.5, fontSize: 28, bold: true });
+      
+      const statBoxes = [
+        { label: "Total Risks", value: risks.length, color: "111111" },
+        { label: "Critical", value: risks.filter(r => r.risk_score >= 18).length, color: "E53935" },
+        { label: "High", value: risks.filter(r => r.risk_score >= 12 && r.risk_score < 18).length, color: "F57C00" },
+        { label: "Medium", value: risks.filter(r => r.risk_score >= 6 && r.risk_score < 12).length, color: "EF9F27" },
+        { label: "Low", value: risks.filter(r => r.risk_score < 6).length, color: "1D9E75" },
+      ];
+      
+      statBoxes.forEach((box, i) => {
+        const x = 0.5 + i * 1.8;
+        slide.addShape(prs.ShapeType.rect, { x, y: 1.3, w: 1.6, h: 1.2, fill: { color: "F8F8F8" }, line: { color: box.color, width: 2 } });
+        slide.addText(String(box.value), { x, y: 1.45, w: 1.6, h: 0.4, fontSize: 24, bold: true, color: box.color, align: "center" });
+        slide.addText(box.label, { x, y: 1.95, w: 1.6, h: 0.3, fontSize: 10, color: "888888", align: "center" });
+      });
+
+      // Top 5 risks
+      sorted.slice(0, 5).forEach((r, i) => {
+        slide.addText(`#${i+1} ${r.title}`, { x: 0.5, y: 2.8 + i * 0.45, w: 7.5, h: 0.35, fontSize: 12, bold: true });
+        slide.addText(parseFloat(r.risk_score).toFixed(1), { x: 8.2, y: 2.8 + i * 0.45, w: 1.3, h: 0.35, fontSize: 12, bold: true, color: riskColor(r.risk_score), align: "right" });
+      });
+
+      // Slide 3+: Individual risks (up to 6)
+      sorted.slice(0, 6).forEach((r, idx) => {
+        slide = prs.addSlide();
+        slide.background = { color: "FFFFFF" };
+        const riskNum = idx + 3;
+        slide.addText(String(riskNum).padStart(2, '0'), { x: 0.5, y: 0.4, w: 0.8, h: 0.6, fontSize: 24, color: riskColor(r.risk_score), bold: true });
+        slide.addText(r.title, { x: 1.5, y: 0.5, w: 8, h: 0.5, fontSize: 28, bold: true, color: riskColor(r.risk_score) });
+        
+        slide.addText(`Score: ${parseFloat(r.risk_score).toFixed(1)}`, { x: 0.5, y: 1.1, w: 2.0, h: 0.3, fontSize: 12, bold: true, color: riskColor(r.risk_score) });
+        slide.addText(`Likelihood: ${parseFloat(r.likelihood).toFixed(1)}/5`, { x: 2.7, y: 1.1, w: 2.0, h: 0.3, fontSize: 12, color: "666666" });
+        slide.addText(`Impact: ${parseFloat(r.impact).toFixed(1)}/5`, { x: 5.0, y: 1.1, w: 2.0, h: 0.3, fontSize: 12, color: "666666" });
+        
+        slide.addText("Description", { x: 0.5, y: 1.5, w: 9, h: 0.3, fontSize: 11, bold: true, color: "888888" });
+        slide.addText(r.description, { x: 0.5, y: 1.85, w: 9, h: 1.0, fontSize: 11, color: "333333" });
+        
+        slide.addText("Mitigation", { x: 0.5, y: 2.95, w: 9, h: 0.3, fontSize: 11, bold: true, color: "888888" });
+        slide.addShape(prs.ShapeType.rect, { x: 0.5, y: 3.3, w: 9, h: 1.8, fill: { color: "FFFBF0" }, line: { color: "FFE066" } });
+        slide.addText(r.mitigation || "—", { x: 0.7, y: 3.45, w: 8.6, h: 1.5, fontSize: 11, color: "555555" });
+      });
+
+      prs.save({ fileName: `PreShield_${filename}.pptx` });
+    };
+    document.head.appendChild(script);
+  };
+
   const formats = [
     { id: "pdf", icon: "📄", label: "PDF", desc: "Opens print dialog — Save as PDF" },
     { id: "word", icon: "📝", label: "Word (.doc)", desc: "Opens in Microsoft Word or Google Docs" },
     { id: "html", icon: "🌐", label: "HTML", desc: "Download as HTML file" },
-    { id: "pptx", icon: "📊", label: "Presentation", desc: "16:9 slide deck — open & print to PPTX" },
+    { id: "pptx", icon: "📊", label: "PowerPoint (.pptx)", desc: "Real .pptx file download" },
   ];
 
   return (
@@ -3292,16 +3371,6 @@ function RisksView({ t, project, onUpdate, colorMode }) {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-      } else if (format === 'ppt') {
-        // Proper PPTX export using a library would be better, but for now we'll provide a clear instruction
-        // and a better formatted slide deck that users can print to PDF then save as PPTX.
-        const pptHtml = buildPPTXHtml({ ...project, risks: [riskMitigationChat] }, t);
-        const win = window.open('', '_blank');
-        win.document.write(pptHtml);
-        win.document.close();
-        setTimeout(() => {
-          alert('To get a .pptx file: \n1. Press Cmd+P (Mac) or Ctrl+P (Windows) in the new tab\n2. Save as PDF\n3. Open the PDF and "Save as PowerPoint"');
-        }, 1000);
       }
     } catch (e) {
       console.error('Export failed:', e);
@@ -3552,8 +3621,7 @@ function RisksView({ t, project, onUpdate, colorMode }) {
                 <option value="html">HTML</option>
                 <option value="pdf">PDF</option>
                 <option value="word">Word (.docx)</option>
-                <option value="ppt">PowerPoint</option>
-                <option value="image">Image (PNG/JPEG)</option>
+                <option value="pptx">PowerPoint (.pptx)</option>
               </select>
               <button className="btn-ghost" onClick={closeRiskMitigationChat} style={{ fontSize: 12, padding: "8px 12px" }}>
                 Done
