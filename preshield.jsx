@@ -268,12 +268,12 @@ function validatePassword(password) {
   return checks;
 }
 
-function PasswordStrength({ password }) {
+function PasswordStrength({ password, t }) {
   const checks = validatePassword(password);
   const items = [
-    { label: "At least 6 characters", ok: checks.length },
-    { label: "At least 1 number", ok: checks.number },
-    { label: "At least 1 capital letter", ok: checks.upper },
+    { label: t.passwordLength, ok: checks.length },
+    { label: t.passwordNumber, ok: checks.number },
+    { label: t.passwordCapital, ok: checks.upper },
   ];
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 8 }}>
@@ -282,7 +282,7 @@ function PasswordStrength({ password }) {
           <div style={{ width: 14, height: 14, borderRadius: "50%", background: item.ok ? "#1D9E7522" : "#E24B4A22", border: `1px solid ${item.ok ? "#1D9E75" : "#E24B4A44"}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
             <span style={{ color: item.ok ? "#1D9E75" : "#E24B4A", fontSize: 9 }}>{item.ok ? "✓" : "✕"}</span>
           </div>
-          <span style={{ color: item.ok ? "#1D9E75" : "#9A9898" }}>{item.label}</span>
+          <span style={{ color: item.ok ? "#1D9E75" : isDarkMode ? "#9A9898" : "#666666" }}>{item.label}</span>
         </div>
       ))}
     </div>
@@ -326,11 +326,11 @@ function AuthScreen({ onAuth }) {
   };
 
   const translations = {
-    EN: { signIn: "Sign in", createAccount: "Create account", resetPassword: "Reset password", email: "Email", password: "Password", show: "Show", hide: "Hide", businessName: "Business name", businessLocation: "Business location", rememberMe: "Remember me", backToSignIn: "← Back to sign in", forgotPassword: "Forgot password?", checkEmail: "Check your email", resetLinkSent: "We sent a reset link to", subtitle: "AI-powered pre-mortem risk assessment", passwordRequirements: "Password doesn't meet requirements.", connectionError: "Connection error. If you're using this inside an iframe, please open it in a new tab to sign in.", accountCreated: "Account created! Please check your email to confirm before signing in." },
-    עב: { signIn: "כניסה", createAccount: "יצירת חשבון", resetPassword: "איפוס סיסמה", email: "דוא״ל", password: "סיסמה", show: "הצג", hide: "הסתר", businessName: "שם העסק", businessLocation: "מיקום העסק", rememberMe: "זכור אותי", backToSignIn: "← חזרה לכניסה", forgotPassword: "שכחת סיסמה?", checkEmail: "בדוק את דוא״לך", resetLinkSent: "שלחנו קישור איפוס ל", subtitle: "הערכת סיכון מראש מופעלת בעזרת AI", passwordRequirements: "הסיסמה אינה עומדת בדרישות.", connectionError: "שגיאת חיבור. אם אתה משתמש בזה בתוך iframe, אנא פתח אותו בכרטיסייה חדשה.", accountCreated: "חשבון נוצר! אנא בדוק את דוא״לך כדי לאשר לפני הכניסה." },
-    ES: { signIn: "Iniciar sesión", createAccount: "Crear cuenta", resetPassword: "Restablecer contraseña", email: "Correo electrónico", password: "Contraseña", show: "Mostrar", hide: "Ocultar", businessName: "Nombre del negocio", businessLocation: "Ubicación del negocio", rememberMe: "Recuérdame", backToSignIn: "← Volver a iniciar sesión", forgotPassword: "¿Olvidaste tu contraseña?", checkEmail: "Revisa tu correo electrónico", resetLinkSent: "Enviamos un enlace de restablecimiento a", subtitle: "Evaluación de riesgos previos a la mortem impulsada por IA", passwordRequirements: "La contraseña no cumple con los requisitos.", connectionError: "Error de conexión. Si está usando esto dentro de un iframe, abra en una pestaña nueva.", accountCreated: "¡Cuenta creada! Revise su correo para confirmar antes de iniciar sesión." },
-    FR: { signIn: "Se connecter", createAccount: "Créer un compte", resetPassword: "Réinitialiser le mot de passe", email: "E-mail", password: "Mot de passe", show: "Afficher", hide: "Masquer", businessName: "Nom de l'entreprise", businessLocation: "Localisation de l'entreprise", rememberMe: "Se souvenir de moi", backToSignIn: "← Retour à la connexion", forgotPassword: "Mot de passe oublié?", checkEmail: "Vérifiez votre e-mail", resetLinkSent: "Nous avons envoyé un lien de réinitialisation à", subtitle: "Évaluation des risques pré-mortem alimentée par l'IA", passwordRequirements: "Le mot de passe ne répond pas aux exigences.", connectionError: "Erreur de connexion. Si vous utilisez ceci dans une iframe, veuillez l'ouvrir dans un nouvel onglet.", accountCreated: "Compte créé! Veuillez vérifier votre e-mail pour confirmer avant de vous connecter." },
-    DE: { signIn: "Anmelden", createAccount: "Konto erstellen", resetPassword: "Passwort zurücksetzen", email: "E-Mail", password: "Passwort", show: "Anzeigen", hide: "Verbergen", businessName: "Geschäftsname", businessLocation: "Geschäftsstandort", rememberMe: "Mich merken", backToSignIn: "← Zurück zur Anmeldung", forgotPassword: "Passwort vergessen?", checkEmail: "Überprüfen Sie Ihre E-Mail", resetLinkSent: "Wir haben einen Zurücksetzen-Link an gesendet", subtitle: "KI-gestützte Vor-Mortem-Risikobewertung", passwordRequirements: "Das Passwort erfüllt die Anforderungen nicht.", connectionError: "Verbindungsfehler. Wenn Sie dies in einem iframe verwenden, öffnen Sie es bitte in einem neuen Tab.", accountCreated: "Konto erstellt! Bitte überprüfen Sie Ihre E-Mail, um sich anzumelden." },
+    EN: { signIn: "Sign in", createAccount: "Create account", resetPassword: "Reset password", email: "Email", password: "Password", show: "Show", hide: "Hide", businessName: "Business name", businessLocation: "Business location", rememberMe: "Remember me", backToSignIn: "← Back to sign in", forgotPassword: "Forgot password?", checkEmail: "Check your email", resetLinkSent: "We sent a reset link to", subtitle: "AI-powered pre-mortem risk assessment", passwordRequirements: "Password doesn't meet requirements.", connectionError: "Connection error. If you're using this inside an iframe, please open it in a new tab to sign in.", accountCreated: "Account created! Please check your email to confirm before signing in.", sendResetLink: "Send reset link", passwordLength: "At least 6 characters", passwordNumber: "At least 1 number", passwordCapital: "At least 1 capital letter", loading: "..." },
+    עב: { signIn: "כניסה", createAccount: "יצירת חשבון", resetPassword: "איפוס סיסמה", email: "דוא״ל", password: "סיסמה", show: "הצג", hide: "הסתר", businessName: "שם העסק", businessLocation: "מיקום העסק", rememberMe: "זכור אותי", backToSignIn: "← חזרה לכניסה", forgotPassword: "שכחת סיסמה?", checkEmail: "בדוק את דוא״לך", resetLinkSent: "שלחנו קישור איפוס ל", subtitle: "הערכת סיכון מראש מופעלת בעזרת AI", passwordRequirements: "הסיסמה אינה עומדת בדרישות.", connectionError: "שגיאת חיבור. אם אתה משתמש בזה בתוך iframe, אנא פתח אותו בכרטיסייה חדשה.", accountCreated: "חשבון נוצר! אנא בדוק את דוא״לך כדי לאשר לפני הכניסה.", sendResetLink: "שלח קישור לאיפוס", passwordLength: "לפחות 6 תווים", passwordNumber: "לפחות ספרה אחת", passwordCapital: "לפחות אות גדולה אחת", loading: "..." },
+    ES: { signIn: "Iniciar sesión", createAccount: "Crear cuenta", resetPassword: "Restablecer contraseña", email: "Correo electrónico", password: "Contraseña", show: "Mostrar", hide: "Ocultar", businessName: "Nombre del negocio", businessLocation: "Ubicación del negocio", rememberMe: "Recuérdame", backToSignIn: "← Volver a iniciar sesión", forgotPassword: "¿Olvidaste tu contraseña?", checkEmail: "Revisa tu correo electrónico", resetLinkSent: "Enviamos un enlace de restablecimiento a", subtitle: "Evaluación de riesgos previos a la mortem impulsada por IA", passwordRequirements: "La contraseña no cumple con los requisitos.", connectionError: "Error de conexión. Si está usando esto dentro de un iframe, abra en una pestaña nueva.", accountCreated: "¡Cuenta creada! Revise su correo para confirmar antes de iniciar sesión.", sendResetLink: "Enviar enlace de restablecimiento", passwordLength: "Al menos 6 caracteres", passwordNumber: "Al menos 1 número", passwordCapital: "Al menos 1 letra mayúscula", loading: "..." },
+    FR: { signIn: "Se connecter", createAccount: "Créer un compte", resetPassword: "Réinitialiser le mot de passe", email: "E-mail", password: "Mot de passe", show: "Afficher", hide: "Masquer", businessName: "Nom de l'entreprise", businessLocation: "Localisation de l'entreprise", rememberMe: "Se souvenir de moi", backToSignIn: "← Retour à la connexion", forgotPassword: "Mot de passe oublié?", checkEmail: "Vérifiez votre e-mail", resetLinkSent: "Nous avons envoyé un lien de réinitialisation à", subtitle: "Évaluation des risques pré-mortem alimentée par l'IA", passwordRequirements: "Le mot de passe ne répond pas aux exigences.", connectionError: "Erreur de connexion. Si vous utilisez ceci dans une iframe, veuillez l'ouvrir dans un nouvel onglet.", accountCreated: "Compte créé! Veuillez vérifier votre e-mail pour confirmer avant de vous connecter.", sendResetLink: "Envoyer le lien de réinitialisation", passwordLength: "Au moins 6 caractères", passwordNumber: "Au moins 1 chiffre", passwordCapital: "Au moins 1 majuscule", loading: "..." },
+    DE: { signIn: "Anmelden", createAccount: "Konto erstellen", resetPassword: "Passwort zurücksetzen", email: "E-Mail", password: "Passwort", show: "Anzeigen", hide: "Verbergen", businessName: "Geschäftsname", businessLocation: "Geschäftsstandort", rememberMe: "Mich merken", backToSignIn: "← Zurück zur Anmeldung", forgotPassword: "Passwort vergessen?", checkEmail: "Überprüfen Sie Ihre E-Mail", resetLinkSent: "Wir haben einen Zurücksetzen-Link an gesendet", subtitle: "KI-gestützte Vor-Mortem-Risikobewertung", passwordRequirements: "Das Passwort erfüllt die Anforderungen nicht.", connectionError: "Verbindungsfehler. Wenn Sie dies in einem iframe verwenden, öffnen Sie es bitte in einem neuen Tab.", accountCreated: "Konto erstellt! Bitte überprüfen Sie Ihre E-Mail, um sich anzumelden.", sendResetLink: "Reset-Link senden", passwordLength: "Mindestens 6 Zeichen", passwordNumber: "Mindestens 1 Zahl", passwordCapital: "Mindestens 1 Großbuchstabe", loading: "..." },
   };
 
   const t = translations[language] || translations.EN;
@@ -462,7 +462,7 @@ function AuthScreen({ onAuth }) {
                     </button>
                   </div>
                   {/* Password requirements for register */}
-                  {mode === "register" && password.length > 0 && <PasswordStrength password={password} />}
+                  {mode === "register" && password.length > 0 && <PasswordStrength password={password} t={t} />}
                 </div>
               )}
 
@@ -475,9 +475,10 @@ function AuthScreen({ onAuth }) {
                       type="text"
                       value={businessName}
                       onChange={e => setBusinessName(e.target.value)}
-                      placeholder="Your business name"
+                      placeholder={t.businessName}
                       onKeyDown={e => e.key === "Enter" && submit()}
                       autoFocus={false}
+                      style={{ background: isDarkMode ? "#13131A" : "#F5F5F5", border: `1px solid ${isDarkMode ? "#2A2A3A" : "#D0D0D0"}`, color: isDarkMode ? "#E8E6E0" : "#1A1A1A" }}
                     />
                   </div>
                   <div>
@@ -486,9 +487,10 @@ function AuthScreen({ onAuth }) {
                       type="text"
                       value={businessLocation}
                       onChange={e => setBusinessLocation(e.target.value)}
-                      placeholder="City, Country"
+                      placeholder={t.businessLocation}
                       onKeyDown={e => e.key === "Enter" && submit()}
                       autoFocus={false}
+                      style={{ background: isDarkMode ? "#13131A" : "#F5F5F5", border: `1px solid ${isDarkMode ? "#2A2A3A" : "#D0D0D0"}`, color: isDarkMode ? "#E8E6E0" : "#1A1A1A" }}
                     />
                   </div>
                 </>
@@ -527,18 +529,18 @@ function AuthScreen({ onAuth }) {
                 }
                 style={{ background: "#5B5BFF", color: "#fff", borderRadius: 8, padding: "12px", fontSize: 14, fontWeight: 500, opacity: (loading || (mode === "register" && !passwordValid && password.length > 0)) ? 0.6 : 1, marginTop: 4 }}
               >
-                {loading ? "..." : mode === "login" ? "Sign in" : mode === "register" ? "Create account" : "Send reset link"}
+                {loading ? t.loading : mode === "login" ? t.signIn : mode === "register" ? t.createAccount : t.sendResetLink}
               </button>
 
               {/* Mode switchers */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 2 }}>
                 {mode === "login" ? (
                   <>
-                    <button onClick={() => { setMode("register"); setError(null); setSuccess(null); }} style={{ fontSize: 12, color: "#9A9898", background: "none", border: "none", cursor: "pointer" }}>Create account</button>
-                    <button onClick={() => { setMode("reset"); setError(null); setSuccess(null); }} style={{ fontSize: 12, color: "#9A9898", background: "none", border: "none", cursor: "pointer" }}>Forgot password?</button>
+                    <button onClick={() => { setMode("register"); setError(null); setSuccess(null); }} style={{ fontSize: 12, color: isDarkMode ? "#9A9898" : "#666666", background: "none", border: "none", cursor: "pointer" }}>{t.createAccount}</button>
+                    <button onClick={() => { setMode("reset"); setError(null); setSuccess(null); }} style={{ fontSize: 12, color: isDarkMode ? "#9A9898" : "#666666", background: "none", border: "none", cursor: "pointer" }}>{t.forgotPassword}</button>
                   </>
                 ) : (
-                  <button onClick={() => { setMode("login"); setError(null); setSuccess(null); }} style={{ fontSize: 12, color: "#9A9898", background: "none", border: "none", cursor: "pointer" }}>← Back to sign in</button>
+                  <button onClick={() => { setMode("login"); setError(null); setSuccess(null); }} style={{ fontSize: 12, color: isDarkMode ? "#9A9898" : "#666666", background: "none", border: "none", cursor: "pointer" }}>{t.backToSignIn}</button>
                 )}
               </div>
             </div>
@@ -2913,13 +2915,27 @@ function mergeProjectMessagesByChannel(existing, channel, nextChannelMessages) {
   return [...keep, ...nextChannelMessages];
 }
 
-function InterviewView({ t, project, onUpdate, lang }) {
+ffunction InterviewView({ t, project, onUpdate, lang }) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [startError, setStartError] = useState(null);
   const messagesEndRef = useRef(null);
   const allMessages = project.messages || [];
-  const messages = allMessages.filter((m) => (m?.channel || "interview") === "interview");
+  const messages = allMessages.filter(m => m.channel === "interview");
+
+  // Re-translate past messages when language changes
+  const translatedMessages = useMemo(() => {
+    return messages.map(m => {
+      if (m.role === "ai") {
+        // If it contains the risks extraction marker, use the current translation for it
+        return {
+          ...m,
+          content: m.content.replace(/✅ Risks extracted and added to your report\.|✅ סיכונים חולצו והתווספו לדוח שלך\.|✅ Riesgos extraídos y añadidos a tu informe\.|✅ Risques extraits et ajoutés à votre rapport\.|✅ Risiken extrahiert und Ihrem Bericht hinzugefügt\./g, t.risksExtracted)
+        };
+      }
+      return m;
+    });
+  }, [messages, t.risksExtracted]);) === "interview");
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
@@ -3070,7 +3086,7 @@ If this is the first message, introduce yourself briefly and ask your first ques
         {project.status === "completed" && !project.report_generated && <div style={{ fontSize: 12, color: "#1D9E75", marginLeft: "auto", fontWeight: 600 }}>✓ {t.statusCompleted}</div>}
       </div>
       <div style={{ flex: 1, overflowY: "auto", padding: "4px 0", display: "flex", flexDirection: "column", gap: 12 }}>
-        {messages.map((m, i) => (
+        {translatedMessages.map((m, i) => (
           <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}>
             <div style={{
               maxWidth: "72%",
