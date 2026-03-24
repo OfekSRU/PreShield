@@ -576,32 +576,55 @@ const sb = {
   async createInviteByEmail(projectId, projectName, email, userBusinessMetadata = {}, emailSubject = "", emailBodyText = "") {
     const trimmed = String(email || "").trim().toLowerCase();
     const origin = (typeof window !== "undefined" && window.location && window.location.origin) ? window.location.origin : "";
+    const projectUrl = origin ? `${origin}?project=${projectId}` : "";
 
-    // Call Supabase Edge Function directly
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/send-invite-email`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        apikey: SUPABASE_KEY,
-        Authorization: `Bearer ${SUPABASE_KEY}`,
-      },
-      body: JSON.stringify({
-        projectId,
-        projectName,
-        email: trimmed,
-        businessName: userBusinessMetadata?.business_name,
-        businessLocation: userBusinessMetadata?.business_location,
-        subject: emailSubject,
-        bodyText: emailBodyText,
-        origin,
-      }),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      console.error("Invite error:", data);
-      throw new Error(data?.message || data?.error || `Failed to send invite email (${res.status})`);
+    // Call Supabase Edge Function directly with improved error handling
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+      
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/send-invite-email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+        },
+        body: JSON.stringify({
+          projectId,
+          projectName,
+          email: trimmed,
+          businessName: userBusinessMetadata?.business_name,
+          businessLocation: userBusinessMetadata?.business_location,
+          subject: emailSubject,
+          bodyText: emailBodyText,
+          origin,
+          projectUrl,
+        }),
+        signal: controller.signal,
+      });
+      
+      clearTimeout(timeoutId);
+      
+      let data = {};
+      try {
+        data = await res.json();
+      } catch (parseError) {
+        console.error("Failed to parse response:", parseError);
+        data = { error: "Invalid server response" };
+      }
+      
+      if (!res.ok) {
+        console.error("Invite error:", data, "Status:", res.status);
+        throw new Error(data?.message || data?.error || `Failed to send invite email (${res.status})`);
+      }
+      return data;
+    } catch (error) {
+      if (error.name === "AbortError") {
+        throw new Error("Request timeout: The server took too long to respond. Please try again.");
+      }
+      throw error;
     }
-    return data;
   },
   async getInviteByToken(token) {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/project_invites?invite_token=eq.${token}&status=eq.pending`, {
@@ -4041,7 +4064,8 @@ function TeamView({ t, project, onUpdate }) {
       ? `${userBusinessName} has invited you to collaborate on "${project.name}" on PreShield.`
       : `You have been invited to collaborate on "${project.name}" on PreShield.`;
     const subject = `You're invited to "${project.name}" on PreShield`;
-    const body = `Hi,\n\n${businessLine}\n\nClick here to join:\n{{joinUrl}}\n`;
+    const projectUrl = window.location.href.split("?")[0];
+    const body = `Hi,\n\n${businessLine}\n\nProject: ${project.name}\nURL: ${projectUrl}\n\nClick here to join:\n{{joinUrl}}\n\nBest regards,\nPreShield Team`;
     setEmailSubjectDraft(subject);
     setEmailBodyDraft(body);
     setEmailSubjectSaved(subject);
@@ -4101,20 +4125,47 @@ function TeamView({ t, project, onUpdate }) {
     setInviting(true);
     setError(null);
     try {
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(trimmed)) {
+        setError("Please enter a valid email address.");
+        setInviting(false);
+        return;
+      }
+      
+      // Ensure project URL is included in the email body
+      const projectUrl = window.location.href.split("?")[0];
+      let finalEmailBody = emailBodyDraft;
+      if (!finalEmailBody.includes(projectUrl)) {
+        finalEmailBody = finalEmailBody.replace(
+          "{{joinUrl}}",
+          `${projectUrl}\n\nProject URL: ${projectUrl}`
+        );
+      }
+      
       await sb.createInviteByEmail(
         project.id,
         project.name,
         trimmed,
-        { business_name: userBusinessName, business_location: userBusinessLocation }
-        ,
+        { business_name: userBusinessName, business_location: userBusinessLocation },
         emailSubjectDraft,
-        emailBodyDraft
+        finalEmailBody
       );
       setShowInviteDialog(false);
       setInviteEmail("");
       await load();
     } catch (e) {
-      setError(e?.message || "Failed to send invite. Try again.");
+      console.error("Invite error:", e);
+      // Provide more specific error messages
+      if (e?.message?.includes("Failed to fetch") || e?.message?.includes("NetworkError")) {
+        setError("Network error: Could not reach the server. Please check your connection and try again.");
+      } else if (e?.message?.includes("401") || e?.message?.includes("403")) {
+        setError("Permission denied: You don't have permission to send invites.");
+      } else if (e?.message?.includes("400")) {
+        setError("Invalid request: Please check the email address and try again.");
+      } else {
+        setError(e?.message || "Failed to send invite. Please try again.");
+      }
     } finally {
       setInviting(false);
     }
@@ -4171,7 +4222,7 @@ function TeamView({ t, project, onUpdate }) {
               <div style={{ fontWeight: 700, fontSize: 16 }}>{t.inviteByEmailTitle || "Invite by Email"}</div>
             </div>
             <div style={{ fontSize: 13, color: "var(--ps-text-muted)", marginBottom: 12, lineHeight: 1.5 }}>
-              {t.inviteEmailIntro || "We will send an invite email to the address below (using your app’s no-reply sender). The email includes your business name and the project name."}
+              {t.inviteEmailIntro || "We will send an invite email to the address below (using your app's no-reply sender). The email includes your business name, the project name, and the project URL."}
             </div>
             <div style={{ marginBottom: 14 }}>
               <label style={{ fontSize: 12, color: "var(--ps-text-muted)", display: "block", marginBottom: 6 }}>{t.teammateEmailLabel || "Teammate email"}</label>
