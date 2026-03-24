@@ -3017,7 +3017,7 @@ function mergeProjectMessagesByChannel(existing, channel, nextChannelMessages) {
   return [...keep, ...nextChannelMessages];
 }
 
-ffunction InterviewView({ t, project, onUpdate, lang }) {
+function InterviewView({ t, project, onUpdate, lang }) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [startError, setStartError] = useState(null);
@@ -3037,7 +3037,7 @@ ffunction InterviewView({ t, project, onUpdate, lang }) {
       }
       return m;
     });
-  }, [messages, t.risksExtracted]);) === "interview");
+  }, [messages, t.risksExtracted]);
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
