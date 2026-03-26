@@ -2849,44 +2849,52 @@ function ExportModal({ project, t, onClose }) {
       slide.addText("Risk Matrix", { x: 1.5, y: 0.5, w: 8, h: 0.5, fontSize: 28, bold: true });
       
       // Draw risk matrix grid
-      const matrixX = 0.8, matrixY = 1.2, cellSize = 0.7, gridSize = 5;
-      const matrixColors = [
-        ["#E8F5E9", "#E8F5E9", "#FFE9B5", "#FFE0B2", "#FFEBEE"],
-        ["#E8F5E9", "#FFE9B5", "#FFE0B2", "#FFE0B2", "#FFEBEE"],
-        ["#FFE9B5", "#FFE0B2", "#FFE0B2", "#FFEBEE", "#FFEBEE"],
-        ["#FFE0B2", "#FFE0B2", "#FFEBEE", "#FFEBEE", "#FFEBEE"],
-        ["#FFEBEE", "#FFEBEE", "#FFEBEE", "#FFEBEE", "#FFEBEE"]
-      ];
+      const matrixX = 1.5, matrixY = 1.2, cellW = 1.4, cellH = 0.75, gridSize = 5;
+      const matrixZoneFill = (I, L) => {
+        const p = (I * L) / 25;
+        if (p < 0.12) return "E8F5E9";
+        if (p < 0.28) return "FFE9B5";
+        if (p < 0.5) return "FFE0B2";
+        return "FFEBEE";
+      };
       
       // Draw grid cells and background colors
-      for (let i = 0; i < gridSize; i++) {
-        for (let j = 0; j < gridSize; j++) {
-          const x = matrixX + j * cellSize;
-          const y = matrixY + i * cellSize;
+      for (let L = 1; L <= gridSize; L++) {
+        for (let I = 1; I <= gridSize; I++) {
+          const x = matrixX + (I - 1) * cellW;
+          const y = matrixY + (5 - L) * cellH;
           slide.addShape(prs.ShapeType.rect, {
-            x, y, w: cellSize, h: cellSize,
-            fill: { color: matrixColors[i][j].replace('#', '') },
-            line: { color: "CCCCCC", width: 1 }
+            x, y, w: cellW, h: cellH,
+            fill: { color: matrixZoneFill(I, L) },
+            line: { color: "000000", transparency: 93, width: 1 }
           });
         }
       }
       
       // Add axis labels
-      slide.addText("Likelihood →", { x: matrixX + 0.5, y: matrixY + gridSize * cellSize + 0.1, w: 3, h: 0.25, fontSize: 10, color: "666666" });
-      slide.addText("Impact ↑", { x: matrixX - 0.7, y: matrixY - 0.3, w: 1, h: 0.25, fontSize: 10, color: "666666" });
+      slide.addText("Impact →", { x: matrixX, y: matrixY - 0.3, w: cellW * 5, h: 0.3, fontSize: 12, bold: true, color: "111111", align: "center" });
+      slide.addText("Likelihood", { x: matrixX - 1.2, y: matrixY + (cellH * 5) / 2 - 0.15, w: 1, h: 0.3, fontSize: 11, color: "888888", rotate: 270, align: "center" });
       
+      // Axis Ticks
+      for (let v = 1; v <= 5; v++) {
+        slide.addText(String(v), { x: matrixX + (v - 1) * cellW, y: matrixY - 0.2, w: cellW, h: 0.2, fontSize: 10, color: "999999", align: "center" });
+        slide.addText(String(v), { x: matrixX - 0.3, y: matrixY + (5 - v) * cellH, w: 0.3, h: cellH, fontSize: 10, color: "999999", align: "right", valign: "middle" });
+      }
+
       // Plot risks on matrix
-      risks.forEach(r => {
-        const likelihood = Math.min(5, Math.max(1, Math.round(r.likelihood || 3)));
-        const impact = Math.min(5, Math.max(1, Math.round(r.impact || 3)));
-        const x = matrixX + (likelihood - 1) * cellSize + cellSize / 2 - 0.15;
-        const y = matrixY + (5 - impact) * cellSize + cellSize / 2 - 0.15;
+      sorted.forEach((r, idx) => {
+        const likelihood = Math.min(5, Math.max(1, parseFloat(r.likelihood || 3)));
+        const impact = Math.min(5, Math.max(1, parseFloat(r.impact || 3)));
+        const dotR = 0.34;
+        const cx = matrixX + ((impact - 1) / 4) * (cellW * 4) + (cellW / 2) - (dotR / 2);
+        const cy = matrixY + ((5 - likelihood) / 4) * (cellH * 4) + (cellH / 2) - (dotR / 2);
         
         slide.addShape(prs.ShapeType.ellipse, {
-          x, y, w: 0.3, h: 0.3,
-          fill: { color: riskColor(r.risk_score) },
-          line: { color: "FFFFFF", width: 1 }
+          x: cx, y: cy, w: dotR, h: dotR,
+          fill: { color: riskColor(r.risk_score).replace('#', '') },
+          line: { color: "FFFFFF", width: 1.5 }
         });
+        slide.addText(`#${idx + 1}`, { x: cx, y: cy, w: dotR, h: dotR, fontSize: 8, bold: true, color: "FFFFFF", align: "center", valign: "middle" });
       });
       
       slide.addText("Each circle represents one risk, colored by severity", { x: 0.5, y: 4.8, w: 9, h: 0.4, fontSize: 10, color: "888888", align: "center" });
