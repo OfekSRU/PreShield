@@ -3445,6 +3445,20 @@ function RisksView({ t, project, onUpdate, colorMode }) {
     setEditDraft(d => (d?.id === id ? null : d));
   };
 
+  const handleRiskFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target.result;
+      const fileMsg = `[File Attached: ${file.name}]\n\nFile Content Summary/Text:\n${content.slice(0, 2000)}${content.length > 2000 ? "..." : ""}`;
+      if (riskChatInputRef.current) {
+        riskChatInputRef.current.value = riskChatInputRef.current.value ? `${riskChatInputRef.current.value}\n\n${fileMsg}` : fileMsg;
+      }
+    };
+    reader.readAsText(file);
+  };
+
   const startRiskMitigationChat = async (risk) => {
     setRiskMitigationChat(risk);
     const history = risk.chatHistory || [];
@@ -3953,7 +3967,11 @@ Your Rules:
                 </div>
                 
                 {/* Input Area */}
-                <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+                <div style={{ display: "flex", gap: 8, marginBottom: 12, alignItems: "center" }}>
+                  <label style={{ cursor: "pointer", padding: "8px", borderRadius: "8px", background: "var(--ps-panel)", border: "1px solid var(--ps-border-subtle)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }} title="Upload file">
+                    <span style={{ fontSize: 18 }}>📎</span>
+                    <input type="file" style={{ display: "none" }} onChange={handleRiskFileUpload} accept=".txt,.md,.csv,.json" />
+                  </label>
                   <input
                     ref={riskChatInputRef}
                     type="text"
