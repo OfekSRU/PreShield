@@ -3132,10 +3132,10 @@ function InterviewView({ t, project, onUpdate, lang }) {
         }
       };
       translateHistory();
-    } else if (messages.length !== (translatedMessages?.length || 0)) {
+    } else if (messages.length !== (translatedMessages?.length || 0) && !translatingHistory) {
       setTranslatedMessages(messages);
     }
-  }, [lang, messages]);
+  }, [lang, messages, translatingHistory]);
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
