@@ -2585,13 +2585,13 @@ function buildReportHTML(project, t, forPrint = false) {
       ${[1, 2, 3, 4, 5].map(v => `<text x="40" y="${58 + (5 - v) * 75.6 + 37.8 + 4}" text-anchor="end" font-size="11" fill="#999">${v}</text>`).join("")}
       <!-- Risk dots -->
       <g clip-path="url(#matrixClip)">
-        ${risks.map(r => {
-          const impact = Math.min(5, Math.max(1, Math.round(r.impact || 3)));
-          const likelihood = Math.min(5, Math.max(1, Math.round(r.likelihood || 3)));
-          const cx = 52 + (impact - 1) * 125.6 + 62.8;
-          const cy = 58 + (5 - likelihood) * 75.6 + 37.8;
-          const color = r.risk_score >= 18 ? "#E53935" : r.risk_score >= 12 ? "#F57C00" : r.risk_score >= 6 ? "#EF9F27" : "#1D9E75";
-          return `<circle cx="${cx}" cy="${cy}" r="17" fill="${color}" filter="url(#matrixShadow)" />`;
+        ${sorted.map((r, idx) => {
+          const impact = Math.min(5, Math.max(1, parseFloat(r.impact || 3)));
+          const likelihood = Math.min(5, Math.max(1, parseFloat(r.likelihood || 3)));
+          const cx = 52 + ((impact - 1) / 4) * (125.6 * 4) + 62.8;
+          const cy = 58 + ((5 - likelihood) / 4) * (75.6 * 4) + 37.8;
+          const color = riskColor(r.risk_score);
+          return `<circle cx="${cx}" cy="${cy}" r="17" fill="${color}" filter="url(#matrixShadow)" /><text x="${cx}" y="${cy + 5}" text-anchor="middle" font-size="10" font-weight="800" fill="#fff">#${idx + 1}</text>`;
         }).join("")}
       </g>
     </svg>
