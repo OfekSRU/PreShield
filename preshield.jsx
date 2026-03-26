@@ -2025,7 +2025,12 @@ function PreShieldApp({ session, onSignOut }) {
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <div onClick={() => setView("dashboard")} style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
             <PreShieldLogoMark mode={colorMode} size={28} />
-            <span style={{ fontWeight: 600, fontSize: 15, letterSpacing: "-0.3px", color: "var(--ps-text)" }}>{t.appName}</span>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <span style={{ fontWeight: 600, fontSize: 15, letterSpacing: "-0.3px", color: "var(--ps-text)", lineHeight: 1.1 }}>{t.appName}</span>
+              {session?.user?.user_metadata?.business_name && (
+                <span style={{ fontSize: 10, color: "var(--ps-text-muted)", fontWeight: 500 }}>{session.user.user_metadata.business_name}</span>
+              )}
+            </div>
           </div>
           {view !== "landing" && view !== "dashboard" && (
             <button className="btn-ghost" style={{ padding: "6px 12px", fontSize: 13 }} onClick={() => setView("dashboard")}>{t.dashboard}</button>
@@ -2245,7 +2250,7 @@ function DashboardView({ t, projects, onSelect, onNew, onDelete }) {
               <div style={{ fontSize: 11, color: "#9A9898", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.5px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {m.label}
               </div>
-              <div style={{ fontSize: 26, fontWeight: 700, fontFamily: "'DM Mono', monospace", lineHeight: 1 }}>{m.value}</div>
+              <div style={{ fontSize: 26, fontWeight: 400, fontFamily: "'DM Sans', sans-serif", lineHeight: 1 }}>{m.value}</div>
               {m.sub ? <div style={{ fontSize: 12, color: "#9A9898", marginTop: 4 }}>{m.sub}</div> : null}
             </div>
             <div style={{ width: 34, height: 34, borderRadius: 10, background: "#F0F1FF", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 16 }}>
@@ -2355,7 +2360,7 @@ function DashboardView({ t, projects, onSelect, onNew, onDelete }) {
 
                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                     <div style={{ textAlign: "right" }}>
-                      <div style={{ fontSize: 18, fontWeight: 700, fontFamily: "'DM Mono', monospace", color: getOverallRiskColor(scoreRank) }}>{scoreRank}</div>
+                      <div style={{ fontSize: 18, fontWeight: 400, fontFamily: "'DM Sans', sans-serif", color: getOverallRiskColor(scoreRank) }}>{scoreRank}</div>
                       <div style={{ fontSize: 10, color: "#9A9898" }}>{t.score}</div>
                     </div>
                     <div style={{ fontSize: 12, color: "#9A9898", textAlign: "right", lineHeight: 1.2 }}>
@@ -4393,6 +4398,22 @@ function TeamView({ t, project, onUpdate }) {
   const submitInviteByEmail = async () => {
     const trimmed = inviteEmail.trim().toLowerCase();
     if (!trimmed) return;
+    
+    // Invitation rules: cannot invite self
+    const stored = localStorage.getItem("ps_session") || sessionStorage.getItem("ps_session");
+    let currentUserEmail = "";
+    try {
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        currentUserEmail = parsed?.user?.email?.toLowerCase() || "";
+      }
+    } catch (e) {}
+    
+    if (trimmed === currentUserEmail) {
+      setError("You cannot invite yourself to your own project.");
+      return;
+    }
+
     setInviting(true);
     setError(null);
     try {
