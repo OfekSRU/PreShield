@@ -3152,6 +3152,18 @@ function InterviewView({ t, project, onUpdate, lang }) {
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target.result;
+      const fileMsg = `[File Attached: ${file.name}]\n\nFile Content Summary/Text:\n${content.slice(0, 2000)}${content.length > 2000 ? "..." : ""}`;
+      setInput(prev => prev ? `${prev}\n\n${fileMsg}` : fileMsg);
+    };
+    reader.readAsText(file);
+  };
+
   const systemPrompt = `You are PreShield, an expert AI facilitator conducting a pre-mortem risk assessment interview. Your goal is to uncover hidden risks before the project starts.
 
 Project context:
@@ -3326,8 +3338,12 @@ If this is the first message, introduce yourself briefly and ask your first ques
         )}
         <div ref={messagesEndRef} />
       </div>
-      <div style={{ display: "flex", gap: 10, marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--ps-border-subtle)" }}>
-        <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendMessage()} placeholder={t.typeMessage} />
+      <div style={{ display: "flex", gap: 10, marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--ps-border-subtle)", alignItems: "center" }}>
+        <label style={{ cursor: "pointer", padding: "8px", borderRadius: "8px", background: "var(--ps-panel)", border: "1px solid var(--ps-border-subtle)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }} title="Upload file">
+          <span style={{ fontSize: 18 }}>📎</span>
+          <input type="file" style={{ display: "none" }} onChange={handleFileUpload} accept=".txt,.md,.csv,.json" />
+        </label>
+        <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendMessage()} placeholder={t.typeMessage} style={{ flex: 1 }} />
         <button className="btn-primary" style={{ minWidth: 72, flexShrink: 0 }} onClick={sendMessage} disabled={loading || !input.trim()}>{t.send}</button>
       </div>
     </div>
