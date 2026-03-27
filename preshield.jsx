@@ -2933,9 +2933,46 @@ function InterviewView({ t, project, onUpdate, lang }) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [startError, setStartError] = useState(null);
+  const [translatedMessages, setTranslatedMessages] = useState([]);
+  const lastLangRef = useRef(lang);
   const messagesEndRef = useRef(null);
   const allMessages = project.messages || [];
   const messages = allMessages.filter((m) => (m?.channel || "interview") === "interview");
+
+  // Translate all past messages when language changes
+  useEffect(() => {
+    if (lastLangRef.current !== lang && messages.length > 0) {
+      const translateHistory = async () => {
+        try {
+          const historyText = messages.map(m => `${m.role === 'user' ? 'User' : 'AI'}: ${m.content}`).join('\n---\n');
+          const targetLangName = lang === "he" ? "Hebrew" : lang === "es" ? "Spanish" : lang === "fr" ? "French" : lang === "de" ? "German" : "English";
+          const prompt = `Translate the following interview conversation into ${targetLangName}. Keep the same format (Role: Content) and preserve the "---" separators. Do not add any extra commentary.\n\n${historyText}`;
+          
+          const body = buildGeminiRequestBody(prompt, [], false);
+          const { res, data } = await geminiGenerateWithModels(body);
+          if (res?.ok) {
+            const translatedText = geminiResponseText(data);
+            const translatedParts = translatedText.split('\n---\n');
+            const newTranslatedMessages = messages.map((m, i) => {
+              if (translatedParts[i]) {
+                const content = translatedParts[i].replace(/^(User|AI):\s*/i, '');
+                return { ...m, content };
+              }
+              return m;
+            });
+            setTranslatedMessages(newTranslatedMessages);
+          }
+        } catch (e) {
+          console.error("Interview history translation failed:", e);
+        } finally {
+          lastLangRef.current = lang;
+        }
+      };
+      translateHistory();
+    } else if (messages.length !== (translatedMessages?.length || 0)) {
+      setTranslatedMessages(messages);
+    }
+  }, [lang, messages]);
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
@@ -3086,7 +3123,7 @@ If this is the first message, introduce yourself briefly and ask your first ques
         {project.status === "completed" && !project.report_generated && <div style={{ fontSize: 12, color: "#1D9E75", marginLeft: "auto", fontWeight: 600 }}>✓ {t.statusCompleted}</div>}
       </div>
       <div style={{ flex: 1, overflowY: "auto", padding: "4px 0", display: "flex", flexDirection: "column", gap: 12 }}>
-        {messages.map((m, i) => (
+        {(translatedMessages.length > 0 ? translatedMessages : messages).map((m, i) => (
           <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}>
             <div style={{
               maxWidth: "72%",
@@ -3099,7 +3136,7 @@ If this is the first message, introduce yourself briefly and ask your first ques
               color: m.role === "user" ? "#fff" : "var(--ps-text)",
               whiteSpace: "pre-wrap",
             }}>
-              {m.content.replace(/\{[\s\S]*"risks"[\s\S]*\}/, t.risksExtracted)}
+              {(m.content || '').replace(/\{[\s\S]*"risks"[\s\S]*\}/, t.risksExtracted)}
             </div>
           </div>
         ))}
