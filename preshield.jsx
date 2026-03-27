@@ -263,15 +263,17 @@ function validatePassword(password) {
   const checks = {
     length: password.length >= 6,
     number: /\d/.test(password),
+    upper: /[A-Z]/.test(password),
   };
   return checks;
 }
 
-function PasswordStrength({ password, t }) {
+function PasswordStrength({ password }) {
   const checks = validatePassword(password);
   const items = [
-    { label: t.passwordLength, ok: checks.length },
-    { label: t.passwordNumber, ok: checks.number },
+    { label: "At least 6 characters", ok: checks.length },
+    { label: "At least 1 number", ok: checks.number },
+    { label: "At least 1 capital letter", ok: checks.upper },
   ];
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 8 }}>
@@ -280,7 +282,7 @@ function PasswordStrength({ password, t }) {
           <div style={{ width: 14, height: 14, borderRadius: "50%", background: item.ok ? "#1D9E7522" : "#E24B4A22", border: `1px solid ${item.ok ? "#1D9E75" : "#E24B4A44"}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
             <span style={{ color: item.ok ? "#1D9E75" : "#E24B4A", fontSize: 9 }}>{item.ok ? "✓" : "✕"}</span>
           </div>
-          <span style={{ color: item.ok ? "#1D9E75" : isDarkMode ? "#9A9898" : "#666666" }}>{item.label}</span>
+          <span style={{ color: item.ok ? "#1D9E75" : "#9A9898" }}>{item.label}</span>
         </div>
       ))}
     </div>
@@ -324,17 +326,17 @@ function AuthScreen({ onAuth }) {
   };
 
   const translations = {
-    EN: { signIn: "Sign in", createAccount: "Create account", resetPassword: "Reset password", email: "Email", password: "Password", show: "Show", hide: "Hide", businessName: "Business name", businessLocation: "Business location", rememberMe: "Remember me", backToSignIn: "← Back to sign in", forgotPassword: "Forgot password?", checkEmail: "Check your email", resetLinkSent: "We sent a reset link to", subtitle: "AI-powered pre-mortem risk assessment", passwordRequirements: "Password doesn't meet requirements.", connectionError: "Connection error. If you're using this inside an iframe, please open it in a new tab to sign in.", accountCreated: "Account created! Please check your email to confirm before signing in.", sendResetLink: "Send reset link", passwordLength: "At least 6 characters", passwordNumber: "At least 1 number", passwordCapital: "At least 1 capital letter", loading: "..." },
-    עב: { signIn: "כניסה", createAccount: "יצירת חשבון", resetPassword: "איפוס סיסמה", email: "דוא״ל", password: "סיסמה", show: "הצג", hide: "הסתר", businessName: "שם העסק", businessLocation: "מיקום העסק", rememberMe: "זכור אותי", backToSignIn: "← חזרה לכניסה", forgotPassword: "שכחת סיסמה?", checkEmail: "בדוק את דוא״לך", resetLinkSent: "שלחנו קישור איפוס ל", subtitle: "הערכת סיכון מראש מופעלת בעזרת AI", passwordRequirements: "הסיסמה אינה עומדת בדרישות.", connectionError: "שגיאת חיבור. אם אתה משתמש בזה בתוך iframe, אנא פתח אותו בכרטיסייה חדשה.", accountCreated: "חשבון נוצר! אנא בדוק את דוא״לך כדי לאשר לפני הכניסה.", sendResetLink: "שלח קישור לאיפוס", passwordLength: "לפחות 6 תווים", passwordNumber: "לפחות ספרה אחת", passwordCapital: "לפחות אות גדולה אחת", loading: "..." },
-    ES: { signIn: "Iniciar sesión", createAccount: "Crear cuenta", resetPassword: "Restablecer contraseña", email: "Correo electrónico", password: "Contraseña", show: "Mostrar", hide: "Ocultar", businessName: "Nombre del negocio", businessLocation: "Ubicación del negocio", rememberMe: "Recuérdame", backToSignIn: "← Volver a iniciar sesión", forgotPassword: "¿Olvidaste tu contraseña?", checkEmail: "Revisa tu correo electrónico", resetLinkSent: "Enviamos un enlace de restablecimiento a", subtitle: "Evaluación de riesgos previos a la mortem impulsada por IA", passwordRequirements: "La contraseña no cumple con los requisitos.", connectionError: "Error de conexión. Si está usando esto dentro de un iframe, abra en una pestaña nueva.", accountCreated: "¡Cuenta creada! Revise su correo para confirmar antes de iniciar sesión.", sendResetLink: "Enviar enlace de restablecimiento", passwordLength: "Al menos 6 caracteres", passwordNumber: "Al menos 1 número", passwordCapital: "Al menos 1 letra mayúscula", loading: "..." },
-    FR: { signIn: "Se connecter", createAccount: "Créer un compte", resetPassword: "Réinitialiser le mot de passe", email: "E-mail", password: "Mot de passe", show: "Afficher", hide: "Masquer", businessName: "Nom de l'entreprise", businessLocation: "Localisation de l'entreprise", rememberMe: "Se souvenir de moi", backToSignIn: "← Retour à la connexion", forgotPassword: "Mot de passe oublié?", checkEmail: "Vérifiez votre e-mail", resetLinkSent: "Nous avons envoyé un lien de réinitialisation à", subtitle: "Évaluation des risques pré-mortem alimentée par l'IA", passwordRequirements: "Le mot de passe ne répond pas aux exigences.", connectionError: "Erreur de connexion. Si vous utilisez ceci dans une iframe, veuillez l'ouvrir dans un nouvel onglet.", accountCreated: "Compte créé! Veuillez vérifier votre e-mail pour confirmer avant de vous connecter.", sendResetLink: "Envoyer le lien de réinitialisation", passwordLength: "Au moins 6 caractères", passwordNumber: "Au moins 1 chiffre", passwordCapital: "Au moins 1 majuscule", loading: "..." },
-    DE: { signIn: "Anmelden", createAccount: "Konto erstellen", resetPassword: "Passwort zurücksetzen", email: "E-Mail", password: "Passwort", show: "Anzeigen", hide: "Verbergen", businessName: "Geschäftsname", businessLocation: "Geschäftsstandort", rememberMe: "Mich merken", backToSignIn: "← Zurück zur Anmeldung", forgotPassword: "Passwort vergessen?", checkEmail: "Überprüfen Sie Ihre E-Mail", resetLinkSent: "Wir haben einen Zurücksetzen-Link an gesendet", subtitle: "KI-gestützte Vor-Mortem-Risikobewertung", passwordRequirements: "Das Passwort erfüllt die Anforderungen nicht.", connectionError: "Verbindungsfehler. Wenn Sie dies in einem iframe verwenden, öffnen Sie es bitte in einem neuen Tab.", accountCreated: "Konto erstellt! Bitte überprüfen Sie Ihre E-Mail, um sich anzumelden.", sendResetLink: "Reset-Link senden", passwordLength: "Mindestens 6 Zeichen", passwordNumber: "Mindestens 1 Zahl", passwordCapital: "Mindestens 1 Großbuchstabe", loading: "..." },
+    EN: { signIn: "Sign in", createAccount: "Create account", resetPassword: "Reset password", email: "Email", password: "Password", show: "Show", hide: "Hide", businessName: "Business name", businessLocation: "Business location", rememberMe: "Remember me", backToSignIn: "← Back to sign in", forgotPassword: "Forgot password?", checkEmail: "Check your email", resetLinkSent: "We sent a reset link to", subtitle: "AI-powered pre-mortem risk assessment", passwordRequirements: "Password doesn't meet requirements.", connectionError: "Connection error. If you're using this inside an iframe, please open it in a new tab to sign in.", accountCreated: "Account created! Please check your email to confirm before signing in." },
+    עב: { signIn: "כניסה", createAccount: "יצירת חשבון", resetPassword: "איפוס סיסמה", email: "דוא״ל", password: "סיסמה", show: "הצג", hide: "הסתר", businessName: "שם העסק", businessLocation: "מיקום העסק", rememberMe: "זכור אותי", backToSignIn: "← חזרה לכניסה", forgotPassword: "שכחת סיסמה?", checkEmail: "בדוק את דוא״לך", resetLinkSent: "שלחנו קישור איפוס ל", subtitle: "הערכת סיכון מראש מופעלת בעזרת AI", passwordRequirements: "הסיסמה אינה עומדת בדרישות.", connectionError: "שגיאת חיבור. אם אתה משתמש בזה בתוך iframe, אנא פתח אותו בכרטיסייה חדשה.", accountCreated: "חשבון נוצר! אנא בדוק את דוא״לך כדי לאשר לפני הכניסה." },
+    ES: { signIn: "Iniciar sesión", createAccount: "Crear cuenta", resetPassword: "Restablecer contraseña", email: "Correo electrónico", password: "Contraseña", show: "Mostrar", hide: "Ocultar", businessName: "Nombre del negocio", businessLocation: "Ubicación del negocio", rememberMe: "Recuérdame", backToSignIn: "← Volver a iniciar sesión", forgotPassword: "¿Olvidaste tu contraseña?", checkEmail: "Revisa tu correo electrónico", resetLinkSent: "Enviamos un enlace de restablecimiento a", subtitle: "Evaluación de riesgos previos a la mortem impulsada por IA", passwordRequirements: "La contraseña no cumple con los requisitos.", connectionError: "Error de conexión. Si está usando esto dentro de un iframe, abra en una pestaña nueva.", accountCreated: "¡Cuenta creada! Revise su correo para confirmar antes de iniciar sesión." },
+    FR: { signIn: "Se connecter", createAccount: "Créer un compte", resetPassword: "Réinitialiser le mot de passe", email: "E-mail", password: "Mot de passe", show: "Afficher", hide: "Masquer", businessName: "Nom de l'entreprise", businessLocation: "Localisation de l'entreprise", rememberMe: "Se souvenir de moi", backToSignIn: "← Retour à la connexion", forgotPassword: "Mot de passe oublié?", checkEmail: "Vérifiez votre e-mail", resetLinkSent: "Nous avons envoyé un lien de réinitialisation à", subtitle: "Évaluation des risques pré-mortem alimentée par l'IA", passwordRequirements: "Le mot de passe ne répond pas aux exigences.", connectionError: "Erreur de connexion. Si vous utilisez ceci dans une iframe, veuillez l'ouvrir dans un nouvel onglet.", accountCreated: "Compte créé! Veuillez vérifier votre e-mail pour confirmer avant de vous connecter." },
+    DE: { signIn: "Anmelden", createAccount: "Konto erstellen", resetPassword: "Passwort zurücksetzen", email: "E-Mail", password: "Passwort", show: "Anzeigen", hide: "Verbergen", businessName: "Geschäftsname", businessLocation: "Geschäftsstandort", rememberMe: "Mich merken", backToSignIn: "← Zurück zur Anmeldung", forgotPassword: "Passwort vergessen?", checkEmail: "Überprüfen Sie Ihre E-Mail", resetLinkSent: "Wir haben einen Zurücksetzen-Link an gesendet", subtitle: "KI-gestützte Vor-Mortem-Risikobewertung", passwordRequirements: "Das Passwort erfüllt die Anforderungen nicht.", connectionError: "Verbindungsfehler. Wenn Sie dies in einem iframe verwenden, öffnen Sie es bitte in einem neuen Tab.", accountCreated: "Konto erstellt! Bitte überprüfen Sie Ihre E-Mail, um sich anzumelden." },
   };
 
   const t = translations[language] || translations.EN;
 
   const checks = validatePassword(password);
-  const passwordValid = checks.length && checks.number;
+  const passwordValid = checks.length && checks.number && checks.upper;
 
   const submit = async () => {
     if (!email.trim()) return;
@@ -391,9 +393,9 @@ function AuthScreen({ onAuth }) {
       onAuth(session);
     } catch (e) {
       if (e.message?.includes("fetch") || e.message?.includes("network") || e.message?.includes("Failed")) {
-        setError(t.connectionErrorIframe || "Connection error. If you're using this inside an iframe, please open it in a new tab to sign in.");
+        setError("Connection error. If you're using this inside an iframe, please open it in a new tab to sign in.");
       } else {
-        setError(e.message || (t.somethingWentWrong || "Something went wrong. Please try again."));
+        setError(e.message || "Something went wrong. Please try again.");
       }
     } finally {
       setLoading(false);
@@ -404,7 +406,7 @@ function AuthScreen({ onAuth }) {
     <div style={{ minHeight: "100vh", background: isDarkMode ? "#0A0A0F" : "#F5F5F5", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, fontFamily: "'DM Sans', 'Helvetica Neue', sans-serif", position: "relative" }}>
       {/* Language and Theme Controls */}
       <div style={{ position: "absolute", top: 20, right: 20, display: "flex", gap: 12, alignItems: "center" }}>
-        <button onClick={handleThemeToggle} style={{ background: isDarkMode ? "#2A2A3A" : "#E0E0E0", border: "1px solid " + (isDarkMode ? "#3A3A4A" : "#D0D0D0"), color: isDarkMode ? "#E8E6E0" : "#333", borderRadius: 6, padding: "6px 10px", fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }} title={t.toggleDarkMode || "Toggle dark/light mode"}>{isDarkMode ? "🌙" : "☀️"}</button>
+        <button onClick={handleThemeToggle} style={{ background: isDarkMode ? "#2A2A3A" : "#E0E0E0", border: "1px solid " + (isDarkMode ? "#3A3A4A" : "#D0D0D0"), color: isDarkMode ? "#E8E6E0" : "#333", borderRadius: 6, padding: "6px 10px", fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }} title="Toggle dark/light mode">{isDarkMode ? "🌙" : "☀️"}</button>
         <select value={language} onChange={(e) => handleLanguageChange(e.target.value)} style={{ background: isDarkMode ? "#2A2A3A" : "#E0E0E0", border: "1px solid " + (isDarkMode ? "#3A3A4A" : "#D0D0D0"), color: isDarkMode ? "#E8E6E0" : "#333", borderRadius: 6, padding: "6px 8px", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}><option value="EN">EN</option><option value="עב">עב</option><option value="ES">ES</option><option value="FR">FR</option><option value="DE">DE</option></select>
       </div>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap'); * { box-sizing: border-box; margin: 0; padding: 0; } input[type="email"], input[type="password"], input[type="text"] { background: #13131A; border: 1px solid #2A2A3A; color: #E8E6E0; border-radius: 8px; padding: 11px 14px; font-family: inherit; font-size: 14px; outline: none; width: 100%; transition: border-color 0.2s; } input:focus { border-color: #5B5BFF; } button { cursor: pointer; font-family: inherit; border: none; transition: all 0.15s; } .check-box { width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid #2A2A3A; background: #13131A; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; } .check-box.checked { background: #5B5BFF; border-color: #5B5BFF; }`}</style>
@@ -416,7 +418,7 @@ function AuthScreen({ onAuth }) {
             <svg width="24" height="24" viewBox="0 0 14 14" fill="none"><path d="M7 1L13 4V7C13 10.3 10.3 13 7 13C3.7 13 1 10.3 1 7V4L7 1Z" stroke="#fff" strokeWidth="1.5" fill="none"/><path d="M4.5 7L6.5 9L9.5 5.5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </div>
           <div style={{ fontSize: 22, fontWeight: 700, color: isDarkMode ? "#E8E6E0" : "#1A1A1A", letterSpacing: "-0.5px" }}>PreShield</div>
-          <div style={{ fontSize: 13, color: isDarkMode ? "#9A9898" : "#666666", marginTop: 4 }}>{t.tagline || "AI-powered pre-mortem risk assessment"}</div>
+          <div style={{ fontSize: 13, color: isDarkMode ? "#9A9898" : "#666666", marginTop: 4 }}>AI-powered pre-mortem risk assessment</div>
         </div>
 
         {/* Card */}
@@ -437,7 +439,7 @@ function AuthScreen({ onAuth }) {
               {/* Email */}
               <div>
                 <label style={{ fontSize: 12, color: isDarkMode ? "#9A9898" : "#666666", marginBottom: 6, display: "block" }}>{t.email}</label>
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder={t.emailPlaceholder || "you@company.com"} onKeyDown={e => e.key === "Enter" && submit()} autoFocus style={{ background: isDarkMode ? "#13131A" : "#F5F5F5", border: `1px solid ${isDarkMode ? "#2A2A3A" : "#D0D0D0"}`, color: isDarkMode ? "#E8E6E0" : "#1A1A1A" }} />
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@company.com" onKeyDown={e => e.key === "Enter" && submit()} autoFocus style={{ background: isDarkMode ? "#13131A" : "#F5F5F5", border: `1px solid ${isDarkMode ? "#2A2A3A" : "#D0D0D0"}`, color: isDarkMode ? "#E8E6E0" : "#1A1A1A" }} />
               </div>
 
               {/* Password */}
@@ -449,7 +451,7 @@ function AuthScreen({ onAuth }) {
                       type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={e => setPassword(e.target.value)}
-                      placeholder={t.passwordPlaceholder || "••••••••"}
+                      placeholder="••••••••"
                       onKeyDown={e => e.key === "Enter" && submit()}
                       style={{ paddingRight: 42, background: isDarkMode ? "#13131A" : "#F5F5F5", border: `1px solid ${isDarkMode ? "#2A2A3A" : "#D0D0D0"}`, color: isDarkMode ? "#E8E6E0" : "#1A1A1A" }}
                     />
@@ -460,7 +462,7 @@ function AuthScreen({ onAuth }) {
                     </button>
                   </div>
                   {/* Password requirements for register */}
-                  {mode === "register" && password.length > 0 && <PasswordStrength password={password} t={t} />}
+                  {mode === "register" && password.length > 0 && <PasswordStrength password={password} />}
                 </div>
               )}
 
@@ -473,10 +475,9 @@ function AuthScreen({ onAuth }) {
                       type="text"
                       value={businessName}
                       onChange={e => setBusinessName(e.target.value)}
-                      placeholder={t.businessName}
+                      placeholder="Your business name"
                       onKeyDown={e => e.key === "Enter" && submit()}
                       autoFocus={false}
-                      style={{ background: isDarkMode ? "#13131A" : "#F5F5F5", border: `1px solid ${isDarkMode ? "#2A2A3A" : "#D0D0D0"}`, color: isDarkMode ? "#E8E6E0" : "#1A1A1A" }}
                     />
                   </div>
                   <div>
@@ -485,10 +486,9 @@ function AuthScreen({ onAuth }) {
                       type="text"
                       value={businessLocation}
                       onChange={e => setBusinessLocation(e.target.value)}
-                      placeholder={t.businessLocation}
+                      placeholder="City, Country"
                       onKeyDown={e => e.key === "Enter" && submit()}
                       autoFocus={false}
-                      style={{ background: isDarkMode ? "#13131A" : "#F5F5F5", border: `1px solid ${isDarkMode ? "#2A2A3A" : "#D0D0D0"}`, color: isDarkMode ? "#E8E6E0" : "#1A1A1A" }}
                     />
                   </div>
                 </>
@@ -519,21 +519,26 @@ function AuthScreen({ onAuth }) {
               {/* Submit */}
               <button
                 onClick={submit}
-                disabled={loading || !email.trim() || (mode !== "reset" && !password) || (mode === "register" && !passwordValid)}
+                disabled={
+                  loading ||
+                  !email.trim() ||
+                  (mode !== "reset" && !password) ||
+                  (mode === "register" && (!passwordValid || !businessName.trim() || !businessLocation.trim()))
+                }
                 style={{ background: "#5B5BFF", color: "#fff", borderRadius: 8, padding: "12px", fontSize: 14, fontWeight: 500, opacity: (loading || (mode === "register" && !passwordValid && password.length > 0)) ? 0.6 : 1, marginTop: 4 }}
               >
-                {loading ? t.loading : mode === "login" ? t.signIn : mode === "register" ? t.createAccount : t.sendResetLink}
+                {loading ? "..." : mode === "login" ? "Sign in" : mode === "register" ? "Create account" : "Send reset link"}
               </button>
 
               {/* Mode switchers */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 2 }}>
                 {mode === "login" ? (
                   <>
-                    <button onClick={() => { setMode("register"); setError(null); setSuccess(null); }} style={{ fontSize: 12, color: isDarkMode ? "#9A9898" : "#666666", background: "none", border: "none", cursor: "pointer" }}>{t.createAccount}</button>
-                    <button onClick={() => { setMode("reset"); setError(null); setSuccess(null); }} style={{ fontSize: 12, color: isDarkMode ? "#9A9898" : "#666666", background: "none", border: "none", cursor: "pointer" }}>{t.forgotPassword}</button>
+                    <button onClick={() => { setMode("register"); setError(null); setSuccess(null); }} style={{ fontSize: 12, color: "#9A9898", background: "none", border: "none", cursor: "pointer" }}>Create account</button>
+                    <button onClick={() => { setMode("reset"); setError(null); setSuccess(null); }} style={{ fontSize: 12, color: "#9A9898", background: "none", border: "none", cursor: "pointer" }}>Forgot password?</button>
                   </>
                 ) : (
-                  <button onClick={() => { setMode("login"); setError(null); setSuccess(null); }} style={{ fontSize: 12, color: isDarkMode ? "#9A9898" : "#666666", background: "none", border: "none", cursor: "pointer" }}>{t.backToSignIn}</button>
+                  <button onClick={() => { setMode("login"); setError(null); setSuccess(null); }} style={{ fontSize: 12, color: "#9A9898", background: "none", border: "none", cursor: "pointer" }}>← Back to sign in</button>
                 )}
               </div>
             </div>
@@ -569,55 +574,29 @@ const sb = {
   async createInviteByEmail(projectId, projectName, email, userBusinessMetadata = {}, emailSubject = "", emailBodyText = "") {
     const trimmed = String(email || "").trim().toLowerCase();
     const origin = (typeof window !== "undefined" && window.location && window.location.origin) ? window.location.origin : "";
-    const projectUrl = origin ? `${origin}?project=${projectId}` : "";
 
-    // Call Supabase Edge Function directly with improved error handling
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
-      
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/send-invite-email`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          apikey: SUPABASE_KEY,
-          Authorization: `Bearer ${SUPABASE_KEY}`,
-        },
-        body: JSON.stringify({
-          projectId,
-          projectName,
-          email: trimmed,
-          businessName: userBusinessMetadata?.business_name,
-          businessLocation: userBusinessMetadata?.business_location,
-          subject: emailSubject,
-          bodyText: emailBodyText,
-          origin,
-          projectUrl,
-        }),
-        signal: controller.signal,
-      });
-      
-      clearTimeout(timeoutId);
-      
-      let data = {};
-      try {
-        data = await res.json();
-      } catch (parseError) {
-        console.error("Failed to parse response:", parseError);
-        data = { error: "Invalid server response" };
-      }
-      
-      if (!res.ok) {
-        console.error("Invite error:", data, "Status:", res.status);
-        throw new Error(data?.message || data?.error || `Failed to send invite email (${res.status})`);
-      }
-      return data;
-    } catch (error) {
-      if (error.name === "AbortError") {
-        throw new Error("Request timeout: The server took too long to respond. Please try again.");
-      }
-      throw error;
-    }
+    // Create + send is handled by the Supabase Edge Function.
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/send-invite-email`, {
+      method: "POST",
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        projectId,
+        projectName,
+        email: trimmed,
+        businessName: userBusinessMetadata?.business_name,
+        businessLocation: userBusinessMetadata?.business_location,
+        subject: emailSubject,
+        bodyText: emailBodyText,
+        origin,
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data?.message || data?.error || "Failed to send invite email");
+    return data;
   },
   async getInviteByToken(token) {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/project_invites?invite_token=eq.${token}&status=eq.pending`, {
@@ -1834,37 +1813,16 @@ function PreShieldApp({ session, onSignOut }) {
     return () => document.removeEventListener("click", close);
   }, [showUserMenu]);
 
-  // Check URL for invite token or project join request on load
+  // Check URL for invite token on load
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const token = params.get("invite");
-    const projectId = params.get("project");
-    
     if (token) {
-      sb.getInviteByToken(token).then(async invite => {
-        if (!invite) return;
-        if (session?.access_token) {
-          try {
-            await sb.acceptInvite(session.access_token, token);
-            const updated = await sb.getProjects(session.access_token);
-            setProjects(updated);
-            window.history.replaceState({}, document.title, window.location.pathname);
-          } catch (e) {
-            setJoinModal({ token, projectName: invite.project_name || "a project", projectId: invite.project_id });
-          }
-        } else {
-          setJoinModal({ token, projectName: invite.project_name || "a project", projectId: invite.project_id });
-        }
-      });
-    } else if (projectId && !projects.find(p => p.id === projectId)) {
-      // If landing with a project ID but not a member yet
-      sb.getProjectPublic(projectId).then(project => {
-        if (project) {
-          setJoinModal({ projectId, projectName: project.name, isDirectJoin: true });
-        }
+      sb.getInviteByToken(token).then(invite => {
+        if (invite) setJoinModal({ token, projectName: invite.project_name || "a project", projectId: invite.project_id });
       });
     }
-  }, [session?.access_token, projects.length]);
+  }, []);
 
   const deleteProject = async (id) => {
     setProjects(prev => prev.filter(p => p.id !== id));
@@ -2034,12 +1992,7 @@ function PreShieldApp({ session, onSignOut }) {
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <div onClick={() => setView("dashboard")} style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
             <PreShieldLogoMark mode={colorMode} size={28} />
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              <span style={{ fontWeight: 600, fontSize: 15, letterSpacing: "-0.3px", color: "var(--ps-text)", lineHeight: 1.1 }}>{t.appName}</span>
-              {session?.user?.user_metadata?.business_name && (
-                <span style={{ fontSize: 10, color: "var(--ps-text-muted)", fontWeight: 500 }}>{session.user.user_metadata.business_name}</span>
-              )}
-            </div>
+            <span style={{ fontWeight: 600, fontSize: 15, letterSpacing: "-0.3px", color: "var(--ps-text)" }}>{t.appName}</span>
           </div>
           {view !== "landing" && view !== "dashboard" && (
             <button className="btn-ghost" style={{ padding: "6px 12px", fontSize: 13 }} onClick={() => setView("dashboard")}>{t.dashboard}</button>
@@ -2259,7 +2212,7 @@ function DashboardView({ t, projects, onSelect, onNew, onDelete }) {
               <div style={{ fontSize: 11, color: "#9A9898", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.5px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {m.label}
               </div>
-              <div style={{ fontSize: 26, fontWeight: 400, fontFamily: "'DM Sans', sans-serif", lineHeight: 1 }}>{m.value}</div>
+              <div style={{ fontSize: 26, fontWeight: 700, fontFamily: "'DM Mono', monospace", lineHeight: 1 }}>{m.value}</div>
               {m.sub ? <div style={{ fontSize: 12, color: "#9A9898", marginTop: 4 }}>{m.sub}</div> : null}
             </div>
             <div style={{ width: 34, height: 34, borderRadius: 10, background: "#F0F1FF", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 16 }}>
@@ -2335,14 +2288,8 @@ function DashboardView({ t, projects, onSelect, onNew, onDelete }) {
                     <div style={{ fontWeight: 700, fontSize: 16, lineHeight: 1.25, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>
                       {p.name}
                     </div>
-                    <div style={{ fontSize: 12, color: "#9A9898", marginTop: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "flex", gap: 4, alignItems: "center" }}>
-                      <span>{t.projectTypes?.[p.project_type] || p.project_type?.replace(/_/g, " ")}</span>
-                      {p.business_name && (
-                        <>
-                          <span>•</span>
-                          <span style={{ color: "#5B5BFF", fontWeight: 500 }}>{p.business_name}</span>
-                        </>
-                      )}
+                    <div style={{ fontSize: 12, color: "#9A9898", marginTop: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {t.projectTypes?.[p.project_type] || p.project_type?.replace(/_/g, " ")}
                     </div>
                   </div>
                   <span
@@ -2375,7 +2322,7 @@ function DashboardView({ t, projects, onSelect, onNew, onDelete }) {
 
                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                     <div style={{ textAlign: "right" }}>
-                      <div style={{ fontSize: 18, fontWeight: 400, fontFamily: "'DM Sans', sans-serif", color: getOverallRiskColor(scoreRank) }}>{scoreRank}</div>
+                      <div style={{ fontSize: 18, fontWeight: 700, fontFamily: "'DM Mono', monospace", color: getOverallRiskColor(scoreRank) }}>{scoreRank}</div>
                       <div style={{ fontSize: 10, color: "#9A9898" }}>{t.score}</div>
                     </div>
                     <div style={{ fontSize: 12, color: "#9A9898", textAlign: "right", lineHeight: 1.2 }}>
@@ -2395,7 +2342,7 @@ function DashboardView({ t, projects, onSelect, onNew, onDelete }) {
 }
 
 function NewProjectView({ t, onBack, onCreate, submitting = false, saveError = null }) {
-  const [form, setForm] = useState({ name: "", description: "", business_name: "", project_type: "software_development", team_size: "", deadline: "", budget_range: "10k_50k", stakeholders: "", constraints: "" });
+  const [form, setForm] = useState({ name: "", description: "", project_type: "software_development", team_size: "", deadline: "", budget_range: "10k_50k", stakeholders: "", constraints: "" });
   const [deadlineErr, setDeadlineErr] = useState(null);
   const minDeadline = localISODate();
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
@@ -2413,15 +2360,9 @@ function NewProjectView({ t, onBack, onCreate, submitting = false, saveError = n
       <button type="button" className="btn-ghost" style={{ marginBottom: 20 }} onClick={onBack} disabled={submitting}>← {t.back}</button>
       <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 20, letterSpacing: "-0.5px" }}>{t.createProject}</h2>
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        <div className="form-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <div>
-            <label className="ps-form-label">{t.projectName} *</label>
-            <input value={form.name} onChange={e => set("name", e.target.value)} placeholder={t.projectNamePlaceholder} disabled={submitting} />
-          </div>
-          <div>
-            <label className="ps-form-label">{t.businessName || "Company Name"}</label>
-            <input value={form.business_name} onChange={e => set("business_name", e.target.value)} placeholder={t.businessNamePlaceholder || "Enter company name"} disabled={submitting} />
-          </div>
+        <div>
+          <label className="ps-form-label">{t.projectName} *</label>
+          <input value={form.name} onChange={e => set("name", e.target.value)} placeholder={t.projectNamePlaceholder} disabled={submitting} />
         </div>
         <div>
           <label className="ps-form-label">{t.description}</label>
@@ -2513,67 +2454,25 @@ function getStatusLabel(status, t) {
   return map[status] || status;
 }
 
-  const buildReportHTML = (project, t, forPrint = false) => {
-    const risks = project.risks || [];
-    const sorted = [...risks].sort((a, b) => b.risk_score - a.risk_score);
-    const scoreColor = project.overall_risk_score >= 60 ? "#E24B4A" : project.overall_risk_score >= 30 ? "#EF9F27" : "#1D9E75";
-    const riskColor = (s) => s >= 18 ? "#E53935" : s >= 12 ? "#F57C00" : s >= 6 ? "#EF9F27" : "#1D9E75";
-    
-    // Matrix constants matching MatrixView
-    const PLOT_W = 720;
-    const PLOT_H = 480;
-    const PAD_LEFT = 52;
-    const PAD_TOP = 58;
-    const PAD_RIGHT = 40;
-    const PAD_BOTTOM = 44;
-    const innerW = PLOT_W - PAD_LEFT - PAD_RIGHT;
-    const innerH = PLOT_H - PAD_TOP - PAD_BOTTOM;
-    const cellW = innerW / 5;
-    const cellH = innerH / 5;
-    const cellInset = 1.5;
-    const cellRx = 10;
-    
-    const toX = (impact) => PAD_LEFT + ((parseFloat(impact) - 1) / 4) * innerW;
-    const toY = (likelihood) => PAD_TOP + ((5 - parseFloat(likelihood)) / 4) * innerH;
-
-    const matrixZoneFill = (I, L) => {
-      const p = (I * L) / 25;
-      if (p < 0.12) return "#E8F5E9";
-      if (p < 0.28) return "#FFE9B5";
-      if (p < 0.5) return "#FFE0B2";
-      return "#FFEBEE";
-    };
-
-    const matrixCells = [];
-    for (let L = 1; L <= 5; L++) {
-      for (let I = 1; I <= 5; I++) {
-        const x0 = PAD_LEFT + (I - 1) * cellW;
-        const y0 = PAD_TOP + (5 - L) * cellH;
-        matrixCells.push(`<rect x="${x0 + cellInset}" y="${y0 + cellInset}" width="${cellW - 2 * cellInset}" height="${cellH - 2 * cellInset}" rx="${cellRx}" ry="${cellRx}" fill="${matrixZoneFill(I, L)}" stroke="rgba(0,0,0,0.07)" stroke-width="1" />`);
-      }
-    }
-
-    const matrixDots = sorted.map((r, idx) => {
-      const impact = Math.min(5, Math.max(1, parseFloat(r.impact || 3)));
-      const likelihood = Math.min(5, Math.max(1, parseFloat(r.likelihood || 3)));
-      const cx = toX(impact);
-      const cy = toY(likelihood);
-      const color = riskColor(r.risk_score);
-      return `
-        <g>
-          <circle cx="${cx}" cy="${cy}" r="17" fill="${color}" stroke="#fff" stroke-width="2" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));" />
-          <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="800" fill="#fff">#${idx + 1}</text>
-        </g>
-      `;
-    }).join('');
-
-    return `<!DOCTYPE html>
+function buildReportHTML(project, t, forPrint = false) {
+  const risks = project.risks || [];
+  const sorted = [...risks].sort((a, b) => b.risk_score - a.risk_score);
+  const scoreColor = project.overall_risk_score >= 60 ? "#E24B4A" : project.overall_risk_score >= 30 ? "#EF9F27" : "#1D9E75";
+  const riskColor = (s) => s >= 18 ? "#E53935" : s >= 12 ? "#F57C00" : s >= 6 ? "#EF9F27" : "#1D9E75";
+  return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>PreShield Report — ${project.name}</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, Helvetica, Arial, sans-serif; color: #111; background: #fff; font-size: 14px; line-height: 1.65; }
   .page { max-width: 780px; margin: 0 auto; padding: ${forPrint ? "20px" : "40px 32px"}; }
-  .matrix-container { margin: 32px 0; border: 1px solid #eee; border-radius: 12px; padding: 24px; background: #fff; page-break-inside: avoid; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  .matrix-container { margin: 32px 0; border: 1px solid #eee; border-radius: 12px; padding: 20px; background: #fcfcfc; page-break-inside: avoid; }
+  .matrix-grid { display: grid; grid-template-columns: 30px repeat(5, 1fr); grid-template-rows: repeat(5, 1fr) 30px; gap: 4px; aspect-ratio: 4/3; max-width: 600px; margin: 0 auto; }
+  .matrix-cell { border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; position: relative; }
+  .matrix-label { display: flex; align-items: center; justify-content: center; font-size: 11px; color: #888; font-weight: 600; }
+  .matrix-dot { width: 10px; height: 10px; border-radius: 50%; background: #111; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.3); position: absolute; z-index: 10; }
+  .matrix-legend { display: flex; gap: 16px; justify-content: center; margin-top: 16px; font-size: 11px; color: #666; }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-color { width: 10px; height: 10px; border-radius: 50%; }
   .header { border-bottom: 3px solid #111; padding-bottom: 20px; margin-bottom: 28px; }
   .header-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
   .brand { font-size: 12px; font-weight: 600; letter-spacing: 2px; color: #888; text-transform: uppercase; margin-bottom: 6px; }
@@ -2627,20 +2526,30 @@ function getStatusLabel(status, t) {
 
   <div class="matrix-container">
     <div style="font-size:13px; font-weight:700; margin-bottom:12px; text-align:center; text-transform:uppercase; letter-spacing:1px; color:#888;">Risk Matrix</div>
-    <svg viewBox="0 0 ${PLOT_W} ${PLOT_H}" style="max-width:100%; height:auto; margin:0 auto; display:block;">
-      <text x="${PAD_LEFT + innerW / 2}" y="22" text-anchor="middle" font-size="14" font-weight="700" fill="#111">Impact →</text>
-      ${[1, 2, 3, 4, 5].map(v => `<text x="${toX(v)}" y="${PAD_TOP - 12}" text-anchor="middle" font-size="12" fill="#888">${v}</text>`).join('')}
-      <text x="18" y="${PAD_TOP + innerH / 2}" text-anchor="middle" font-size="12" fill="#888" transform="rotate(-90, 18, ${PAD_TOP + innerH / 2})">Likelihood</text>
-      ${[1, 2, 3, 4, 5].map(v => `<text x="${PAD_LEFT - 14}" y="${toY(v) + 4}" text-anchor="end" font-size="12" fill="#888">${v}</text>`).join('')}
-      ${matrixCells.join('')}
-      <rect x="${PAD_LEFT}" y="${PAD_TOP}" width="${innerW}" height="${innerH}" fill="none" stroke="#eee" stroke-width="1.5" rx="12" />
-      ${matrixDots}
-    </svg>
-    <div class="matrix-legend" style="display: flex; gap: 20px; justify-content: center; margin-top: 24px; font-size: 12px; color: #666;">
-      <div class="legend-item" style="display: flex; align-items: center; gap: 6px;"><div class="legend-color" style="width: 10px; height: 10px; border-radius: 50%; background:#1D9E75"></div>Low</div>
-      <div class="legend-item" style="display: flex; align-items: center; gap: 6px;"><div class="legend-color" style="width: 10px; height: 10px; border-radius: 50%; background:#EF9F27"></div>Medium</div>
-      <div class="legend-item" style="display: flex; align-items: center; gap: 6px;"><div class="legend-color" style="width: 10px; height: 10px; border-radius: 50%; background:#F57C00"></div>High</div>
-      <div class="legend-item" style="display: flex; align-items: center; gap: 6px;"><div class="legend-color" style="width: 10px; height: 10px; border-radius: 50%; background:#E53935"></div>Critical</div>
+    <div class="matrix-grid">
+      ${[5, 4, 3, 2, 1].map(L => `
+        <div class="matrix-label">${L}</div>
+        ${[1, 2, 3, 4, 5].map(I => {
+          const cellRisks = risks.filter(r => Math.round(r.likelihood) === L && Math.round(r.impact) === I);
+          const p = (I * L) / 25;
+          const bg = p < 0.12 ? "#E8F5E9" : p < 0.28 ? "#FFE9B5" : p < 0.5 ? "#FFE0B2" : "#FFEBEE";
+          return `<div class="matrix-cell" style="background:${bg}">
+            ${cellRisks.length > 0 ? `<div class="matrix-dot" title="${cellRisks.length} risks"></div>` : ""}
+          </div>`;
+        }).join("")}
+      `).join("")}
+      <div></div>
+      ${[1, 2, 3, 4, 5].map(I => `<div class="matrix-label">${I}</div>`).join("")}
+    </div>
+    <div style="display:flex; justify-content:space-between; margin-top:4px; font-size:10px; color:#aaa; font-weight:700; text-transform:uppercase; letter-spacing:1px;">
+      <div style="margin-left:30px">Impact →</div>
+      <div style="transform:rotate(-90deg) translateY(-280px); width:0; white-space:nowrap;">Likelihood →</div>
+    </div>
+    <div class="matrix-legend">
+      <div class="legend-item"><div class="legend-color" style="background:#1D9E75"></div>Low</div>
+      <div class="legend-item"><div class="legend-color" style="background:#EF9F27"></div>Medium</div>
+      <div class="legend-item"><div class="legend-color" style="background:#F57C00"></div>High</div>
+      <div class="legend-item"><div class="legend-color" style="background:#E53935"></div>Critical</div>
     </div>
   </div>
 
@@ -2684,12 +2593,151 @@ function getStatusLabel(status, t) {
 
   <div class="footer">
     <span>PreShield Risk Assessment</span>
-    <span>Generated ${new Date().toLocaleDateString()}</span>
+    <span>${new Date().toLocaleDateString()} · ${risks.length} risks identified</span>
   </div>
 </div>
 </body></html>`;
-  };
+}
 
+function buildPPTXHtml(project, t) {
+  const risks = project.risks || [];
+  const sorted = [...risks].sort((a, b) => b.risk_score - a.risk_score);
+  const scoreColor = project.overall_risk_score >= 60 ? "#E24B4A" : project.overall_risk_score >= 30 ? "#EF9F27" : "#1D9E75";
+  const riskColor = (s) => s >= 18 ? "#E53935" : s >= 12 ? "#F57C00" : s >= 6 ? "#EF9F27" : "#1D9E75";
+  const crit = risks.filter(r => r.risk_score >= 18);
+  const high = risks.filter(r => r.risk_score >= 12 && r.risk_score < 18);
+  const med = risks.filter(r => r.risk_score >= 6 && r.risk_score < 12);
+  const low = risks.filter(r => r.risk_score < 6);
+  const slides = [
+    // Slide 1: Title
+    `<div class="slide slide-title">
+      <div class="slide-brand">PreShield · Risk Assessment</div>
+      <h1>${project.name}</h1>
+      <div class="slide-sub">${project.project_type?.replace(/_/g, " ")} &nbsp;·&nbsp; ${new Date().toLocaleDateString()}${project.deadline ? ` &nbsp;·&nbsp; Deadline: ${project.deadline}` : ""}</div>
+      ${project.description ? `<p class="slide-desc">${project.description}</p>` : ""}
+      <div class="title-score" style="border-color:${scoreColor};color:${scoreColor}">
+        <div class="big-num">${parseFloat(project.overall_risk_score || 0).toFixed(1)}</div>
+        <div>Overall Risk Score</div>
+      </div>
+    </div>`,
+    // Slide 2: Summary
+    `<div class="slide">
+      <div class="slide-num">02</div>
+      <h2>Risk Summary</h2>
+      <div class="stat-row">
+        <div class="stat-box"><div class="stat-n">${risks.length}</div><div class="stat-l">Total Risks</div></div>
+        <div class="stat-box" style="border-color:#E53935"><div class="stat-n" style="color:#E53935">${crit.length}</div><div class="stat-l">Critical</div></div>
+        <div class="stat-box" style="border-color:#F57C00"><div class="stat-n" style="color:#F57C00">${high.length}</div><div class="stat-l">High</div></div>
+        <div class="stat-box" style="border-color:#EF9F27"><div class="stat-n" style="color:#B8860B">${med.length}</div><div class="stat-l">Medium</div></div>
+        <div class="stat-box" style="border-color:#1D9E75"><div class="stat-n" style="color:#1D9E75">${low.length}</div><div class="stat-l">Low</div></div>
+      </div>
+      <div style="margin-top:28px">
+        ${sorted.slice(0, 5).map((r, i) => `
+        <div class="risk-row-slide">
+          <span style="color:#888;font-size:12px;min-width:20px">#${i+1}</span>
+          <span style="flex:1;font-weight:600;font-size:14px">${r.title}</span>
+          <span class="score-badge" style="background:${riskColor(r.risk_score)}22;color:${riskColor(r.risk_score)}">${parseFloat(r.risk_score).toFixed(1)}</span>
+        </div>`).join("")}
+      </div>
+    </div>`,
+    // Slides 3+: Individual risks (up to 6)
+    ...sorted.slice(0, 6).map((r, i) => `
+    <div class="slide">
+      <div class="slide-num" style="color:${riskColor(r.risk_score)}">0${i+3}</div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:14px">
+        <h2 style="margin:0">${r.title}</h2>
+        <div class="score-badge-lg" style="background:${riskColor(r.risk_score)}22;color:${riskColor(r.risk_score)};border:2px solid ${riskColor(r.risk_score)}44">${parseFloat(r.risk_score).toFixed(1)}</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <span class="chip">${r.category}</span>
+        <span class="chip">L: ${parseFloat(r.likelihood).toFixed(1)}</span>
+        <span class="chip">I: ${parseFloat(r.impact).toFixed(1)}</span>
+        ${r.owner ? `<span class="chip">👤 ${r.owner}</span>` : ""}
+      </div>
+      <div class="slide-section-label">Risk Description</div>
+      <p style="font-size:14px;color:#333;margin-bottom:16px">${r.description}</p>
+      <div class="slide-section-label" style="color:#b8930a">Mitigation Strategy</div>
+      <div class="mitigation-block">${r.mitigation || "—"}</div>
+    </div>`),
+    // Last slide
+    `<div class="slide slide-end">
+      <div class="slide-brand">PreShield</div>
+      <h1 style="font-size:28px">Thank you</h1>
+      <p style="color:#888;margin-top:8px">This pre-mortem was generated by PreShield AI</p>
+    </div>`
+  ];
+
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>PreShield Deck — ${project.name}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, Helvetica, Arial, sans-serif; background: #1a1a2e; color: #111; }
+  .slides-container { display: flex; flex-direction: column; gap: 4px; padding: 20px; }
+  .slide { background: #fff; width: 960px; height: 540px; padding: 48px 56px; position: relative; overflow: hidden; page-break-after: always; display: flex; flex-direction: column; justify-content: center; }
+  .slide::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 5px; background: #5B5BFF; }
+  .slide-title { background: #0A0A0F; color: #fff; }
+  .slide-title::before { background: #5B5BFF; height: 5px; }
+  .slide-end { background: #0A0A0F; color: #fff; text-align: center; }
+  .slide-brand { font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: #9999FF; margin-bottom: 16px; }
+  h1 { font-size: 36px; font-weight: 800; letter-spacing: -1px; margin-bottom: 8px; }
+  h2 { font-size: 22px; font-weight: 700; margin-bottom: 16px; }
+  .slide-sub { font-size: 13px; color: #888; margin-bottom: 16px; }
+  .slide-desc { font-size: 14px; color: #aaa; max-width: 500px; }
+  .slide-num { font-size: 11px; font-weight: 700; letter-spacing: 2px; color: #ccc; position: absolute; top: 24px; right: 56px; }
+  .title-score { border: 3px solid; border-radius: 12px; padding: 16px 24px; text-align: center; position: absolute; right: 56px; top: 50%; transform: translateY(-50%); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+  .big-num { font-size: 48px; font-weight: 900; font-family: monospace; display: block; margin-bottom: 4px; }
+  .stat-row { display: flex; gap: 16px; }
+  .stat-box { flex: 1; border: 2px solid #eee; border-radius: 10px; padding: 16px; text-align: center; }
+  .stat-n { font-size: 36px; font-weight: 800; font-family: monospace; }
+  .stat-l { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #888; margin-top: 4px; }
+  .risk-row-slide { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
+  .score-badge { padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; font-family: monospace; }
+  .score-badge-lg { padding: 8px 14px; border-radius: 10px; font-size: 22px; font-weight: 800; font-family: monospace; flex-shrink: 0; }
+  .chip { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; background: #f0f0f0; color: #555; }
+  .slide-section-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #888; margin-bottom: 6px; }
+  .mitigation-block { background: #fffbf0; border: 1px solid #ffe08a; border-radius: 8px; padding: 12px 14px; font-size: 13px; color: #555; }
+  @media print { body { background: #fff; } .slides-container { padding: 0; gap: 0; } .slide { page-break-after: always; } }
+</style></head><body>
+<div class="slides-container">${slides.join("")}</div>
+</body></html>`;
+}
+
+function ExportModal({ project, t, onClose }) {
+  const [exporting, setExporting] = useState(null);
+  const filename = project.name.replace(/[^a-z0-9]/gi, "_");
+
+  const doExport = async (format) => {
+    setExporting(format);
+    try {
+      if (format === "html") {
+        const html = buildReportHTML(project, t);
+        download(html, `PreShield_${filename}.html`, "text/html");
+      } else if (format === "pdf") {
+        const html = buildReportHTML(project, t, true);
+        const win = window.open("", "_blank");
+        win.document.write(html);
+        win.document.close();
+        setTimeout(() => { win.print(); }, 600);
+      } else if (format === "word") {
+        const html = buildReportHTML(project, t);
+        const wordHtml = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'><head><meta charset='utf-8'></head><body>${html}</body></html>`;
+        download(wordHtml, `PreShield_${filename}.doc`, "application/msword");
+      } else if (format === "pptx") {
+        const html = buildPPTXHtml(project, t);
+        download(html, `PreShield_${filename}_deck.html`, "text/html");
+      } else if (format === "jpeg") {
+        const html = buildReportHTML(project, t);
+        const blob = new Blob([html], { type: "text/html" });
+        const url = URL.createObjectURL(blob);
+        const win = window.open(url, "_blank");
+        setTimeout(() => { URL.revokeObjectURL(url); }, 3000);
+        // Show instruction for JPEG
+        setExporting("jpeg-tip");
+        return;
+      }
+    } finally {
+      if (format !== "jpeg") setExporting(null);
+    }
+  };
 
   const download = (content, filename, type) => {
     const blob = new Blob([content], { type });
@@ -2699,287 +2747,12 @@ function getStatusLabel(status, t) {
     URL.revokeObjectURL(url);
   };
 
-  const generatePPTXFile = async (project, t, filename) => {
-    // Load PptxGenJS library dynamically
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js';
-    script.onload = () => {
-      const PptxGenJS = window.PptxGenJS;
-      const prs = new PptxGenJS();
-      prs.defineLayout({ name: 'LAYOUT1', width: 10, height: 5.625 });
-      prs.layout = 'LAYOUT1';
-
-      const risks = project.risks || [];
-      const sorted = [...risks].sort((a, b) => b.risk_score - a.risk_score);
-      const scoreColor = project.overall_risk_score >= 60 ? "E24B4A" : project.overall_risk_score >= 30 ? "EF9F27" : "1D9E75";
-      const riskColor = (s) => s >= 18 ? "E53935" : s >= 12 ? "F57C00" : s >= 6 ? "EF9F27" : "1D9E75";
-
-      // Slide 1: Title
-      let slide = prs.addSlide();
-      slide.background = { color: "FFFFFF" };
-      slide.addText("PreShield · Risk Assessment", { x: 0.5, y: 0.5, w: 9, h: 0.4, fontSize: 14, color: "888888", bold: true });
-      slide.addText(project.name, { x: 0.5, y: 1.0, w: 9, h: 0.8, fontSize: 44, bold: true, color: "111111" });
-      slide.addText(`${project.project_type?.replace(/_/g, " ")} · ${new Date().toLocaleDateString()}${project.deadline ? ` · Deadline: ${project.deadline}` : ""}`, { x: 0.5, y: 1.9, w: 9, h: 0.4, fontSize: 14, color: "666666" });
-      if (project.description) slide.addText(project.description, { x: 0.5, y: 2.4, w: 9, h: 1.0, fontSize: 12, color: "555555" });
-      
-      // Score box
-      slide.addShape(prs.ShapeType.rect, { x: 7.5, y: 1.0, w: 2.0, h: 1.2, fill: { color: scoreColor, transparency: 85 }, line: { color: scoreColor, width: 2 } });
-      slide.addText(parseFloat(project.overall_risk_score || 0).toFixed(1), { x: 7.5, y: 1.1, w: 2.0, h: 0.5, fontSize: 32, bold: true, color: scoreColor, align: "center" });
-      slide.addText("Risk Score", { x: 7.5, y: 1.6, w: 2.0, h: 0.3, fontSize: 10, color: "888888", align: "center" });
-
-      // Slide 2: Summary
-      slide = prs.addSlide();
-      slide.background = { color: "FFFFFF" };
-      slide.addText("02", { x: 0.5, y: 0.4, w: 0.8, h: 0.6, fontSize: 24, color: "CCCCCC", bold: true });
-      slide.addText("Risk Summary", { x: 1.5, y: 0.5, w: 8, h: 0.5, fontSize: 28, bold: true });
-      
-      const statBoxes = [
-        { label: "Total Risks", value: risks.length, color: "111111" },
-        { label: "Critical", value: risks.filter(r => r.risk_score >= 18).length, color: "E53935" },
-        { label: "High", value: risks.filter(r => r.risk_score >= 12 && r.risk_score < 18).length, color: "F57C00" },
-        { label: "Medium", value: risks.filter(r => r.risk_score >= 6 && r.risk_score < 12).length, color: "EF9F27" },
-        { label: "Low", value: risks.filter(r => r.risk_score < 6).length, color: "1D9E75" },
-      ];
-      
-      statBoxes.forEach((box, i) => {
-        const x = 0.5 + i * 1.8;
-        slide.addShape(prs.ShapeType.rect, { x, y: 1.3, w: 1.6, h: 1.2, fill: { color: "F8F8F8" }, line: { color: box.color, width: 2 } });
-        slide.addText(String(box.value), { x, y: 1.45, w: 1.6, h: 0.4, fontSize: 24, bold: true, color: box.color, align: "center" });
-        slide.addText(box.label, { x, y: 1.95, w: 1.6, h: 0.3, fontSize: 10, color: "888888", align: "center" });
-      });
-
-      // Top 5 risks
-      sorted.slice(0, 5).forEach((r, i) => {
-        slide.addText(`#${i+1} ${r.title}`, { x: 0.5, y: 2.8 + i * 0.45, w: 7.5, h: 0.35, fontSize: 12, bold: true });
-        slide.addText(parseFloat(r.risk_score).toFixed(1), { x: 8.2, y: 2.8 + i * 0.45, w: 1.3, h: 0.35, fontSize: 12, bold: true, color: riskColor(r.risk_score), align: "right" });
-      });
-
-      // Slide 3: Risk Matrix
-      slide = prs.addSlide();
-      slide.background = { color: "FFFFFF" };
-      slide.addText("03", { x: 0.5, y: 0.4, w: 0.8, h: 0.6, fontSize: 24, color: "CCCCCC", bold: true });
-      slide.addText("Risk Matrix", { x: 1.5, y: 0.5, w: 8, h: 0.5, fontSize: 28, bold: true });
-      
-      // Draw risk matrix grid matching app styles
-      const matrixX = 1.8, matrixY = 1.3, innerW = 6.4, innerH = 3.6;
-      const cellW = innerW / 5, cellH = innerH / 5;
-      const cellInset = 0.03, cellRx = 0.12;
-
-      const matrixZoneFill = (I, L) => {
-        const p = (I * L) / 25;
-        if (p < 0.12) return "E8F5E9";
-        if (p < 0.28) return "FFE9B5";
-        if (p < 0.5) return "FFE0B2";
-        return "FFEBEE";
-      };
-      
-      // Draw grid cells
-      for (let L = 1; L <= 5; L++) {
-        for (let I = 1; I <= 5; I++) {
-          const x = matrixX + (I - 1) * cellW;
-          const y = matrixY + (5 - L) * cellH;
-          slide.addShape(prs.ShapeType.rect, {
-            x: x + cellInset, y: y + cellInset, w: cellW - 2 * cellInset, h: cellH - 2 * cellInset,
-            fill: { color: matrixZoneFill(I, L) },
-            line: { color: "000000", transparency: 93, width: 1 },
-            rectRadius: cellRx
-          });
-        }
-      }
-      
-      // Add axis labels
-      slide.addText("Impact →", { x: matrixX, y: matrixY - 0.4, w: innerW, h: 0.4, fontSize: 14, bold: true, color: "111111", align: "center" });
-      slide.addText("Likelihood", { x: matrixX - 1.2, y: matrixY + innerH / 2 - 0.5, w: 1, h: 1, fontSize: 12, color: "888888", rotate: 270, align: "center" });
-      
-      // Axis Ticks
-      for (let v = 1; v <= 5; v++) {
-        slide.addText(String(v), { x: matrixX + (v - 1) * cellW, y: matrixY - 0.25, w: cellW, h: 0.25, fontSize: 11, color: "888888", align: "center" });
-        slide.addText(String(v), { x: matrixX - 0.35, y: matrixY + (5 - v) * cellH, w: 0.35, h: cellH, fontSize: 11, color: "888888", align: "right", valign: "middle" });
-      }
-
-      // Plot risks on matrix
-      sorted.forEach((r, idx) => {
-        const likelihood = Math.min(5, Math.max(1, parseFloat(r.likelihood || 3)));
-        const impact = Math.min(5, Math.max(1, parseFloat(r.impact || 3)));
-        const dotR = 0.38;
-        const cx = matrixX + ((impact - 1) / 4) * (innerW - cellW) + (cellW / 2) - (dotR / 2);
-        const cy = matrixY + ((5 - likelihood) / 4) * (innerH - cellH) + (cellH / 2) - (dotR / 2);
-        
-        slide.addShape(prs.ShapeType.ellipse, {
-          x: cx, y: cy, w: dotR, h: dotR,
-          fill: { color: riskColor(r.risk_score).replace('#', '') },
-          line: { color: "FFFFFF", width: 2 }
-        });
-        slide.addText(`#${idx + 1}`, { x: cx, y: cy, w: dotR, h: dotR, fontSize: 9, bold: true, color: "FFFFFF", align: "center", valign: "middle" });
-      });
-      
-      slide.addText("Each circle represents one risk, colored by severity", { x: 0.5, y: 5.1, w: 9, h: 0.4, fontSize: 10, color: "888888", align: "center" });
-
-      // Slide 4+: Individual risks (up to 6)
-      sorted.slice(0, 6).forEach((r, idx) => {
-        slide = prs.addSlide();
-        slide.background = { color: "FFFFFF" };
-        const riskNum = idx + 4;
-        slide.addText(String(riskNum).padStart(2, '0'), { x: 0.5, y: 0.4, w: 0.8, h: 0.6, fontSize: 24, color: riskColor(r.risk_score), bold: true });
-        slide.addText(r.title, { x: 1.5, y: 0.5, w: 8, h: 0.5, fontSize: 28, bold: true, color: riskColor(r.risk_score) });
-        
-        slide.addText(`Score: ${parseFloat(r.risk_score).toFixed(1)}`, { x: 0.5, y: 1.1, w: 2.0, h: 0.3, fontSize: 12, bold: true, color: riskColor(r.risk_score) });
-        slide.addText(`Likelihood: ${parseFloat(r.likelihood).toFixed(1)}/5`, { x: 2.7, y: 1.1, w: 2.0, h: 0.3, fontSize: 12, color: "666666" });
-        slide.addText(`Impact: ${parseFloat(r.impact).toFixed(1)}/5`, { x: 5.0, y: 1.1, w: 2.0, h: 0.3, fontSize: 12, color: "666666" });
-        
-        slide.addText("Description", { x: 0.5, y: 1.5, w: 9, h: 0.3, fontSize: 11, bold: true, color: "888888" });
-        slide.addText(r.description, { x: 0.5, y: 1.85, w: 9, h: 1.0, fontSize: 11, color: "333333" });
-        
-        slide.addText("Mitigation", { x: 0.5, y: 2.95, w: 9, h: 0.3, fontSize: 11, bold: true, color: "888888" });
-        slide.addShape(prs.ShapeType.rect, { x: 0.5, y: 3.3, w: 9, h: 1.8, fill: { color: "FFFBF0" }, line: { color: "FFE066" } });
-        slide.addText(r.mitigation || "—", { x: 0.7, y: 3.45, w: 8.6, h: 1.5, fontSize: 11, color: "555555" });
-      });
-
-      prs.save({ fileName: `PreShield_${filename}.pptx` });
-    };
-    document.head.appendChild(script);
-  };
-
-      
-      // Draw grid cells
-      for (let L = 1; L <= 5; L++) {
-        for (let I = 1; I <= 5; I++) {
-          const x = matrixX + (I - 1) * cellW;
-          const y = matrixY + (5 - L) * cellH;
-          slide.addShape(prs.ShapeType.rect, {
-            x: x + cellInset, y: y + cellInset, w: cellW - 2 * cellInset, h: cellH - 2 * cellInset,
-            fill: { color: matrixZoneFill(I, L) },
-            line: { color: "000000", transparency: 93, width: 1 },
-            rectRadius: cellRx
-          });
-        }
-      }
-      
-      // Add axis labels
-      slide.addText("Impact →", { x: matrixX, y: matrixY - 0.4, w: innerW, h: 0.4, fontSize: 14, bold: true, color: "111111", align: "center" });
-      slide.addText("Likelihood", { x: matrixX - 1.2, y: matrixY + innerH / 2 - 0.5, w: 1, h: 1, fontSize: 12, color: "888888", rotate: 270, align: "center" });
-      
-      // Axis Ticks
-      for (let v = 1; v <= 5; v++) {
-        slide.addText(String(v), { x: matrixX + (v - 1) * cellW, y: matrixY - 0.25, w: cellW, h: 0.25, fontSize: 11, color: "888888", align: "center" });
-        slide.addText(String(v), { x: matrixX - 0.35, y: matrixY + (5 - v) * cellH, w: 0.35, h: cellH, fontSize: 11, color: "888888", align: "right", valign: "middle" });
-      }
-
-      // Plot risks on matrix
-      sorted.forEach((r, idx) => {
-        const likelihood = Math.min(5, Math.max(1, parseFloat(r.likelihood || 3)));
-        const impact = Math.min(5, Math.max(1, parseFloat(r.impact || 3)));
-        const dotR = 0.38;
-        const cx = matrixX + ((impact - 1) / 4) * (innerW - cellW) + (cellW / 2) - (dotR / 2);
-        const cy = matrixY + ((5 - likelihood) / 4) * (innerH - cellH) + (cellH / 2) - (dotR / 2);
-        
-        slide.addShape(prs.ShapeType.ellipse, {
-          x: cx, y: cy, w: dotR, h: dotR,
-          fill: { color: riskColor(r.risk_score).replace('#', '') },
-          line: { color: "FFFFFF", width: 2 }
-        });
-        slide.addText(`#${idx + 1}`, { x: cx, y: cy, w: dotR, h: dotR, fontSize: 9, bold: true, color: "FFFFFF", align: "center", valign: "middle" });
-      });
-      
-      slide.addText("Each circle represents one risk, colored by severity", { x: 0.5, y: 5.1, w: 9, h: 0.4, fontSize: 10, color: "888888", align: "center" });
-
-      // Slide 4+: Individual risks (up to 6)
-      sorted.slice(0, 6).forEach((r, idx) => {
-        slide = prs.addSlide();
-        slide.background = { color: "FFFFFF" };
-        const riskNum = idx + 4;
-        slide.addText(String(riskNum).padStart(2, '0'), { x: 0.5, y: 0.4, w: 0.8, h: 0.6, fontSize: 24, color: riskColor(r.risk_score), bold: true });
-        slide.addText(r.title, { x: 1.5, y: 0.5, w: 8, h: 0.5, fontSize: 28, bold: true, color: riskColor(r.risk_score) });
-        
-        slide.addText(`Score: ${parseFloat(r.risk_score).toFixed(1)}`, { x: 0.5, y: 1.1, w: 2.0, h: 0.3, fontSize: 12, bold: true, color: riskColor(r.risk_score) });
-        slide.addText(`Likelihood: ${parseFloat(r.likelihood).toFixed(1)}/5`, { x: 2.7, y: 1.1, w: 2.0, h: 0.3, fontSize: 12, color: "666666" });
-        slide.addText(`Impact: ${parseFloat(r.impact).toFixed(1)}/5`, { x: 5.0, y: 1.1, w: 2.0, h: 0.3, fontSize: 12, color: "666666" });
-        
-        slide.addText("Description", { x: 0.5, y: 1.5, w: 9, h: 0.3, fontSize: 11, bold: true, color: "888888" });
-        slide.addText(r.description, { x: 0.5, y: 1.85, w: 9, h: 1.0, fontSize: 11, color: "333333" });
-        
-        slide.addText("Mitigation", { x: 0.5, y: 2.95, w: 9, h: 0.3, fontSize: 11, bold: true, color: "888888" });
-        slide.addShape(prs.ShapeType.rect, { x: 0.5, y: 3.3, w: 9, h: 1.8, fill: { color: "FFFBF0" }, line: { color: "FFE066" } });
-        slide.addText(r.mitigation || "—", { x: 0.7, y: 3.45, w: 8.6, h: 1.5, fontSize: 11, color: "555555" });
-      });
-
-      prs.save({ fileName: `PreShield_${filename}.pptx` });
-    };
-    document.head.appendChild(script);
-  };
-
-      
-      // Draw grid cells and background colors
-      for (let L = 1; L <= gridSize; L++) {
-        for (let I = 1; I <= gridSize; I++) {
-          const x = matrixX + (I - 1) * cellW;
-          const y = matrixY + (5 - L) * cellH;
-          slide.addShape(prs.ShapeType.rect, {
-            x, y, w: cellW, h: cellH,
-            fill: { color: matrixZoneFill(I, L) },
-            line: { color: "000000", transparency: 93, width: 1 }
-          });
-        }
-      }
-      
-      // Add axis labels
-      slide.addText("Impact →", { x: matrixX, y: matrixY - 0.3, w: cellW * 5, h: 0.3, fontSize: 12, bold: true, color: "111111", align: "center" });
-      slide.addText("Likelihood", { x: matrixX - 1.2, y: matrixY + (cellH * 5) / 2 - 0.15, w: 1, h: 0.3, fontSize: 11, color: "888888", rotate: 270, align: "center" });
-      
-      // Axis Ticks
-      for (let v = 1; v <= 5; v++) {
-        slide.addText(String(v), { x: matrixX + (v - 1) * cellW, y: matrixY - 0.2, w: cellW, h: 0.2, fontSize: 10, color: "999999", align: "center" });
-        slide.addText(String(v), { x: matrixX - 0.3, y: matrixY + (5 - v) * cellH, w: 0.3, h: cellH, fontSize: 10, color: "999999", align: "right", valign: "middle" });
-      }
-
-      // Plot risks on matrix
-      sorted.forEach((r, idx) => {
-        const likelihood = Math.min(5, Math.max(1, parseFloat(r.likelihood || 3)));
-        const impact = Math.min(5, Math.max(1, parseFloat(r.impact || 3)));
-        const dotR = 0.34;
-        const cx = matrixX + ((impact - 1) / 4) * (cellW * 4) + (cellW / 2) - (dotR / 2);
-        const cy = matrixY + ((5 - likelihood) / 4) * (cellH * 4) + (cellH / 2) - (dotR / 2);
-        
-        slide.addShape(prs.ShapeType.ellipse, {
-          x: cx, y: cy, w: dotR, h: dotR,
-          fill: { color: riskColor(r.risk_score).replace('#', '') },
-          line: { color: "FFFFFF", width: 1.5 }
-        });
-        slide.addText(`#${idx + 1}`, { x: cx, y: cy, w: dotR, h: dotR, fontSize: 8, bold: true, color: "FFFFFF", align: "center", valign: "middle" });
-      });
-      
-      slide.addText("Each circle represents one risk, colored by severity", { x: 0.5, y: 4.8, w: 9, h: 0.4, fontSize: 10, color: "888888", align: "center" });
-
-      // Slide 4+: Individual risks (up to 6)
-      sorted.slice(0, 6).forEach((r, idx) => {
-        slide = prs.addSlide();
-        slide.background = { color: "FFFFFF" };
-        const riskNum = idx + 4;
-        slide.addText(String(riskNum).padStart(2, '0'), { x: 0.5, y: 0.4, w: 0.8, h: 0.6, fontSize: 24, color: riskColor(r.risk_score), bold: true });
-        slide.addText(r.title, { x: 1.5, y: 0.5, w: 8, h: 0.5, fontSize: 28, bold: true, color: riskColor(r.risk_score) });
-        
-        slide.addText(`Score: ${parseFloat(r.risk_score).toFixed(1)}`, { x: 0.5, y: 1.1, w: 2.0, h: 0.3, fontSize: 12, bold: true, color: riskColor(r.risk_score) });
-        slide.addText(`Likelihood: ${parseFloat(r.likelihood).toFixed(1)}/5`, { x: 2.7, y: 1.1, w: 2.0, h: 0.3, fontSize: 12, color: "666666" });
-        slide.addText(`Impact: ${parseFloat(r.impact).toFixed(1)}/5`, { x: 5.0, y: 1.1, w: 2.0, h: 0.3, fontSize: 12, color: "666666" });
-        
-        slide.addText("Description", { x: 0.5, y: 1.5, w: 9, h: 0.3, fontSize: 11, bold: true, color: "888888" });
-        slide.addText(r.description, { x: 0.5, y: 1.85, w: 9, h: 1.0, fontSize: 11, color: "333333" });
-        
-        slide.addText("Mitigation", { x: 0.5, y: 2.95, w: 9, h: 0.3, fontSize: 11, bold: true, color: "888888" });
-        slide.addShape(prs.ShapeType.rect, { x: 0.5, y: 3.3, w: 9, h: 1.8, fill: { color: "FFFBF0" }, line: { color: "FFE066" } });
-        slide.addText(r.mitigation || "—", { x: 0.7, y: 3.45, w: 8.6, h: 1.5, fontSize: 11, color: "555555" });
-      });
-
-      prs.save({ fileName: `PreShield_${filename}.pptx` });
-    };
-    document.head.appendChild(script);
-  };
-
   const formats = [
     { id: "pdf", icon: "📄", label: "PDF", desc: "Opens print dialog — Save as PDF" },
     { id: "word", icon: "📝", label: "Word (.doc)", desc: "Opens in Microsoft Word or Google Docs" },
     { id: "html", icon: "🌐", label: "HTML", desc: "Download as HTML file" },
-    { id: "pptx", icon: "📊", label: "PowerPoint (.pptx)", desc: "Real .pptx file download" },
+    { id: "pptx", icon: "📊", label: "Presentation", desc: "16:9 slide deck — open & print to PPTX" },
+    { id: "jpeg", icon: "🖼️", label: "JPEG / Image", desc: "Opens report — use browser screenshot" },
   ];
 
   return (
@@ -2989,19 +2762,28 @@ function getStatusLabel(status, t) {
           <div style={{ fontWeight: 600, fontSize: 16, color: "var(--ps-text)" }}>Export Report</div>
           <button onClick={onClose} style={{ background: "none", border: "none", color: "var(--ps-text-muted)", fontSize: 18, cursor: "pointer", padding: "0 4px" }}>✕</button>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {formats.map(f => (
-            <button key={f.id} onClick={() => doExport(f.id)} disabled={!!exporting} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 16px", background: exporting === f.id ? "#5B5BFF22" : "var(--ps-panel)", border: "1px solid var(--ps-border-subtle)", borderRadius: 10, cursor: "pointer", textAlign: "left", transition: "all 0.15s", opacity: exporting && exporting !== f.id ? 0.5 : 1 }}>
-              <span style={{ fontSize: 22, flexShrink: 0 }}>{f.icon}</span>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 14, fontWeight: 500, color: "var(--ps-text)" }}>{f.label}</div>
-                <div style={{ fontSize: 11, color: "var(--ps-text-muted)", marginTop: 1 }}>{f.desc}</div>
-              </div>
-              {exporting === f.id && <span style={{ fontSize: 12, color: "#5B5BFF" }}>...</span>}
-              {!exporting && <span style={{ color: "var(--ps-text-muted)", fontSize: 14 }}>↓</span>}
-            </button>
-          ))}
-        </div>
+        {exporting === "jpeg-tip" ? (
+          <div style={{ textAlign: "center", padding: "12px 0" }}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>🖼️</div>
+            <div style={{ fontSize: 14, color: "var(--ps-text)", marginBottom: 8 }}>Report opened in new tab</div>
+            <div style={{ fontSize: 13, color: "var(--ps-text-muted)", marginBottom: 20 }}>Use your browser's screenshot tool or <strong>Cmd+Shift+4</strong> (Mac) / <strong>Windows+Shift+S</strong> to capture as JPEG.</div>
+            <button className="btn-primary" style={{ width: "100%" }} onClick={() => setExporting(null)}>Back</button>
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {formats.map(f => (
+              <button key={f.id} onClick={() => doExport(f.id)} disabled={!!exporting} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 16px", background: exporting === f.id ? "#5B5BFF22" : "var(--ps-panel)", border: "1px solid var(--ps-border-subtle)", borderRadius: 10, cursor: "pointer", textAlign: "left", transition: "all 0.15s", opacity: exporting && exporting !== f.id ? 0.5 : 1 }}>
+                <span style={{ fontSize: 22, flexShrink: 0 }}>{f.icon}</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: "var(--ps-text)" }}>{f.label}</div>
+                  <div style={{ fontSize: 11, color: "var(--ps-text-muted)", marginTop: 1 }}>{f.desc}</div>
+                </div>
+                {exporting === f.id && <span style={{ fontSize: 12, color: "#5B5BFF" }}>...</span>}
+                {!exporting && <span style={{ color: "var(--ps-text-muted)", fontSize: 14 }}>↓</span>}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -3151,23 +2933,20 @@ function InterviewView({ t, project, onUpdate, lang }) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [startError, setStartError] = useState(null);
+  const [translatedMessages, setTranslatedMessages] = useState([]);
+  const lastLangRef = useRef(lang);
   const messagesEndRef = useRef(null);
   const allMessages = project.messages || [];
-  const messages = allMessages.filter(m => m.channel === "interview");
+  const messages = allMessages.filter((m) => (m?.channel || "interview") === "interview");
 
-  // Re-translate past messages when language changes
-  const [translatedMessages, setTranslatedMessages] = useState(messages);
-  const [translatingHistory, setTranslatingHistory] = useState(false);
-  const lastLangRef = useRef(lang);
-
+  // Translate all past messages when language changes
   useEffect(() => {
     if (lastLangRef.current !== lang && messages.length > 0) {
       const translateHistory = async () => {
-        setTranslatingHistory(true);
         try {
           const historyText = messages.map(m => `${m.role === 'user' ? 'User' : 'AI'}: ${m.content}`).join('\n---\n');
           const targetLangName = lang === "he" ? "Hebrew" : lang === "es" ? "Spanish" : lang === "fr" ? "French" : lang === "de" ? "German" : "English";
-          const prompt = `Translate the following chat history into ${targetLangName}. Keep the same format (Role: Content) and preserve the "---" separators. Do not add any extra commentary.\n\n${historyText}`;
+          const prompt = `Translate the following interview conversation into ${targetLangName}. Keep the same format (Role: Content) and preserve the "---" separators. Do not add any extra commentary.\n\n${historyText}`;
           
           const body = buildGeminiRequestBody(prompt, [], false);
           const { res, data } = await geminiGenerateWithModels(body);
@@ -3176,40 +2955,26 @@ function InterviewView({ t, project, onUpdate, lang }) {
             const translatedParts = translatedText.split('\n---\n');
             const newTranslatedMessages = messages.map((m, i) => {
               if (translatedParts[i]) {
-                const content = translatedParts[i].replace(/^(User|AI|Assistant):\s*/i, '');
+                const content = translatedParts[i].replace(/^(User|AI):\s*/i, '');
                 return { ...m, content };
               }
               return m;
             });
             setTranslatedMessages(newTranslatedMessages);
-            lastLangRef.current = lang;
           }
         } catch (e) {
-          console.error("History translation failed:", e);
+          console.error("Interview history translation failed:", e);
         } finally {
-          setTranslatingHistory(false);
+          lastLangRef.current = lang;
         }
       };
       translateHistory();
-    } else if (messages.length !== (translatedMessages?.length || 0) && !translatingHistory) {
+    } else if (messages.length !== (translatedMessages?.length || 0)) {
       setTranslatedMessages(messages);
-      lastLangRef.current = lang;
     }
-  }, [lang, messages, translatingHistory]);
+  }, [lang, messages]);
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
-
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const content = event.target.result;
-      const fileMsg = `[File Attached: ${file.name}]\n\nFile Content Summary/Text:\n${content.slice(0, 2000)}${content.length > 2000 ? "..." : ""}`;
-      setInput(prev => prev ? `${prev}\n\n${fileMsg}` : fileMsg);
-    };
-    reader.readAsText(file);
-  };
 
   const systemPrompt = `You are PreShield, an expert AI facilitator conducting a pre-mortem risk assessment interview. Your goal is to uncover hidden risks before the project starts.
 
@@ -3243,53 +3008,14 @@ If this is the first message, introduce yourself briefly and ask your first ques
         timestamp: new Date().toISOString(),
       };
       const withRedirect = mergeProjectMessagesByChannel(allMessages, "interview", [...messages, redirectMsg]);
-      onUpdate({ ...project, messages: withRedirect });
+      onUpdate({ ...project, messages: withRedirect, status: "interviewing" });
+      setInput("");
       return;
     }
-
-    const handleFileUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      const content = event.target.result;
-      const fileName = file.name;
-      const fileText = `[File Uploaded: ${fileName}]\n\nContent:\n${content}`;
-      
-      const userMsg = { role: "user", channel: "interview", content: fileText, timestamp: new Date().toISOString() };
-      const updatedMsgs = [...messages, userMsg];
-      onUpdate({ ...project, messages: mergeProjectMessagesByChannel(allMessages, "interview", updatedMsgs) });
-      
-      setLoading(true);
-      try {
-        const systemPromptWithFile = `${systemPrompt}\n\nThe user has uploaded a file named "${fileName}". Please analyze its content and incorporate the information into the risk assessment. If the file contains project details, use them to identify more specific risks.`;
-        const { res, data } = await geminiGenerateWithModels(buildGeminiRequestBody(systemPromptWithFile, updatedMsgs));
-        if (!res?.ok) {
-          const errText = geminiApiError(data, res?.status || 0);
-          const errMsg = { role: "ai", channel: "interview", content: errText, timestamp: new Date().toISOString() };
-          onUpdate({ ...project, messages: mergeProjectMessagesByChannel(allMessages, "interview", [...updatedMsgs, errMsg]) });
-          return;
-        }
-        const text = geminiResponseText(data);
-        const aiMsg = { role: "ai", channel: "interview", content: text, timestamp: new Date().toISOString() };
-        onUpdate({ ...project, messages: mergeProjectMessagesByChannel(allMessages, "interview", [...updatedMsgs, aiMsg]) });
-      } catch (err) {
-        const errMsg = { role: "ai", channel: "interview", content: t.connectionError, timestamp: new Date().toISOString() };
-        onUpdate({ ...project, messages: mergeProjectMessagesByChannel(allMessages, "interview", [...updatedMsgs, errMsg]) });
-      } finally {
-        setLoading(false);
-      }
-    };
-    reader.readAsText(file);
-  };
-
-  const sendMessage = async () => {
-    const text = input.trim();
-    if (!text || loading) return;
-    setInput("");
-    const userMsg = { role: "user", channel: "interview", content: text, timestamp: new Date().toISOString() };
+    const userMsg = { role: "user", channel: "interview", content: input, timestamp: new Date().toISOString() };
     const updatedMsgs = [...messages, userMsg];
-    onUpdate({ ...project, messages: mergeProjectMessagesByChannel(allMessages, "interview", updatedMsgs) });
+    onUpdate({ ...project, messages: mergeProjectMessagesByChannel(allMessages, "interview", updatedMsgs), status: "interviewing" });
+    setInput("");
     setLoading(true);
     try {
       const { res, data } = await geminiGenerateWithModels(buildGeminiRequestBody(systemPrompt, updatedMsgs));
@@ -3397,7 +3123,7 @@ If this is the first message, introduce yourself briefly and ask your first ques
         {project.status === "completed" && !project.report_generated && <div style={{ fontSize: 12, color: "#1D9E75", marginLeft: "auto", fontWeight: 600 }}>✓ {t.statusCompleted}</div>}
       </div>
       <div style={{ flex: 1, overflowY: "auto", padding: "4px 0", display: "flex", flexDirection: "column", gap: 12 }}>
-        {translatedMessages.map((m, i) => (
+        {(translatedMessages.length > 0 ? translatedMessages : messages).map((m, i) => (
           <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}>
             <div style={{
               maxWidth: "72%",
@@ -3410,7 +3136,7 @@ If this is the first message, introduce yourself briefly and ask your first ques
               color: m.role === "user" ? "#fff" : "var(--ps-text)",
               whiteSpace: "pre-wrap",
             }}>
-              {m.content.replace(/\{[\s\S]*"risks"[\s\S]*\}/, t.risksExtracted)}
+              {(m.content || '').replace(/\{[\s\S]*"risks"[\s\S]*\}/, t.risksExtracted)}
             </div>
           </div>
         ))}
@@ -3424,12 +3150,8 @@ If this is the first message, introduce yourself briefly and ask your first ques
         )}
         <div ref={messagesEndRef} />
       </div>
-      <div style={{ display: "flex", gap: 10, marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--ps-border-subtle)", alignItems: "center" }}>
-        <label style={{ cursor: "pointer", padding: "8px", borderRadius: "8px", background: "var(--ps-panel)", border: "1px solid var(--ps-border-subtle)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }} title="Upload file">
-          <span style={{ fontSize: 18 }}>📎</span>
-          <input type="file" style={{ display: "none" }} onChange={handleFileUpload} accept=".txt,.md,.csv,.json" />
-        </label>
-        <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendMessage()} placeholder={t.typeMessage} style={{ flex: 1 }} />
+      <div style={{ display: "flex", gap: 10, marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--ps-border-subtle)" }}>
+        <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendMessage()} placeholder={t.typeMessage} />
         <button className="btn-primary" style={{ minWidth: 72, flexShrink: 0 }} onClick={sendMessage} disabled={loading || !input.trim()}>{t.send}</button>
       </div>
     </div>
@@ -3454,7 +3176,7 @@ function clampLikertInput(v) {
 function mitigationToDetailedSteps(text) {
   const raw = String(text || "").trim();
   if (!raw) return "—";
-  if (/step\s*\d+[:.-]/i.test(raw) || /\n[-*]\s+/.test(raw) || /\n\d+[.]\s+/.test(raw)) return raw;
+  if (/step\s*\d+[:.)-]/i.test(raw) || /\n[-*]\s+/.test(raw) || /\n\d+[.)]\s+/.test(raw)) return raw;
   const parts = raw
     .split(/[.;]\s+/)
     .map((p) => p.trim())
@@ -3472,47 +3194,6 @@ function RisksView({ t, project, onUpdate, colorMode }) {
   const [riskMitigationChat, setRiskMitigationChat] = useState(null);
   const [riskChatMessages, setRiskChatMessages] = useState([]);
   const [riskChatLoading, setRiskChatLoading] = useState(false);
-  const [translatedRiskMessages, setTranslatedRiskMessages] = useState([]);
-  const lastRiskLangRef = useRef(project.language);
-
-  useEffect(() => {
-    if (lastRiskLangRef.current !== project.language && riskChatMessages.length > 0) {
-      const translateRiskHistory = async () => {
-        try {
-          const historyText = riskChatMessages.map(m => `${m.role === 'user' ? 'User' : 'AI'}: ${m.content}`).join('\n---\n');
-          const targetLangName = project.language === "he" ? "Hebrew" : project.language === "es" ? "Spanish" : project.language === "fr" ? "French" : project.language === "de" ? "German" : "English";
-          const prompt = `Translate the following risk mitigation discussion into ${targetLangName}. Keep the same format (Role: Content) and preserve the "---" separators. Do not add any extra commentary.\n\n${historyText}`;
-          
-          const body = buildGeminiRequestBody(prompt, [], false);
-          const { res, data } = await geminiGenerateWithModels(body);
-          if (res?.ok) {
-            const translatedText = geminiResponseText(data);
-            const translatedParts = translatedText.split('\n---\n');
-            const newTranslatedMessages = riskChatMessages.map((m, i) => {
-              if (translatedParts[i]) {
-                const content = translatedParts[i].replace(/^(User|AI):\s*/i, '');
-                return { ...m, content };
-              }
-              return m;
-            });
-            setTranslatedRiskMessages(newTranslatedMessages);
-          }
-        } catch (e) {
-          console.error("Risk history translation failed:", e);
-        } finally {
-          lastRiskLangRef.current = project.language;
-        }
-      };
-      translateRiskHistory();
-    } else if (riskChatMessages.length !== (translatedRiskMessages?.length || 0)) {
-      setTranslatedRiskMessages(riskChatMessages);
-    }
-  }, [project.language, riskChatMessages]);
-  const riskChatInputRef = React.useRef(null);
-  const [currentStep, setCurrentStep] = useState(1);
-  const [completedSteps, setCompletedSteps] = useState([]);
-  const [riskUpdates, setRiskUpdates] = useState({});
-  const [suggestedUpdates, setSuggestedUpdates] = useState(null);
   const sortedRisks = [...risks].sort((a, b) => b.risk_score - a.risk_score);
   const mitBlue = colorMode === "light" ? "#2563EB" : "#60A5FA";
 
@@ -3531,35 +3212,17 @@ function RisksView({ t, project, onUpdate, colorMode }) {
     setEditDraft(d => (d?.id === id ? null : d));
   };
 
-  const handleRiskFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const content = event.target.result;
-      const fileMsg = `[File Attached: ${file.name}]\n\nFile Content Summary/Text:\n${content.slice(0, 2000)}${content.length > 2000 ? "..." : ""}`;
-      if (riskChatInputRef.current) {
-        riskChatInputRef.current.value = riskChatInputRef.current.value ? `${riskChatInputRef.current.value}\n\n${fileMsg}` : fileMsg;
-      }
-    };
-    reader.readAsText(file);
-  };
-
   const startRiskMitigationChat = async (risk) => {
     setRiskMitigationChat(risk);
     const history = risk.chatHistory || [];
     setRiskChatMessages(history);
-    setCurrentStep(1);
-    setCompletedSteps([]);
-    setRiskUpdates({});
-    setSuggestedUpdates(null);
     
     // If we already have history, don't trigger initial AI message
     if (history.length > 0) return;
 
     setRiskChatLoading(true);
     try {
-      const systemPrompt = `You are an expert risk mitigation specialist. Your role is to guide the user STEP-BY-STEP through resolving this specific risk. DO NOT provide all solutions at once.\n\nRISK DETAILS:\n- Title: ${risk.title}\n- Description: ${risk.description}\n- Current Likelihood: ${risk.likelihood}/5\n- Current Impact: ${risk.impact}/5\n- Current Mitigation: ${risk.mitigation || "Not yet defined"}\n- Status: ${risk.status || "identified"}\n\nYOUR APPROACH - FOLLOW STRICTLY:\n1. STEP 1: Ask clarifying questions to understand the root cause\n2. STEP 2: Help them identify key stakeholders and dependencies\n3. STEP 3: Define success criteria and measurable outcomes\n4. STEP 4: Create a specific action plan with timeline\n5. STEP 5: Guide implementation and track progress\n\nIMPORTANT RULES:\n- Focus on ONE step at a time - do NOT skip ahead\n- When they complete a step, acknowledge it and ask if they're ready for the next\n- When they report fixes or actions taken, suggest specific likelihood/impact updates\n- Format score suggestions as: \"Based on your progress, I suggest: Likelihood: X/5, Impact: Y/5\"\n- Keep responses focused, concise, and actionable\n- Track their progress through the 5-step process\n\nCurrent Step: 1 (Understanding the root cause)`;
+      const systemPrompt = `You are an expert risk mitigation specialist. Your role is to help develop a comprehensive, detailed mitigation plan for this specific risk.\n\nRISK DETAILS:\n- Title: ${risk.title}\n- Description: ${risk.description}\n- Current Likelihood: ${risk.likelihood}/5\n- Current Impact: ${risk.impact}/5\n- Current Mitigation: ${risk.mitigation || "Not yet defined"}\n- Status: ${risk.status || "identified"}\n\nPROVIDE:\n1. 5-7 detailed, actionable mitigation tips specific to this risk\n2. For each tip: implementation steps and expected outcomes\n3. Clarifying questions to understand project context\n4. Refined mitigation strategy through conversation\n5. Realistic updates to likelihood and impact\n6. Specific metrics or KPIs to track effectiveness\n\nFOCUS: Keep conversation ONLY about this specific risk. Provide practical, implementable guidance.`;
       
       // Use buildGeminiRequestBody with isInterview=false to avoid interview-specific instructions
       const body = buildGeminiRequestBody(systemPrompt, [], false);
@@ -3580,149 +3243,31 @@ function RisksView({ t, project, onUpdate, colorMode }) {
     }
   };
 
-  // Intelligent step completion detection based on conversation context
-  const evaluateStepCompletion = (userMsg, aiResponse, stepNum) => {
-    const userLower = userMsg.toLowerCase();
-    const aiLower = aiResponse.toLowerCase();
-    
-    const stepPatterns = {
-      1: {
-        // Step 1: User should provide context/answers to clarifying questions
-        keywords: ["because", "due to", "caused by", "reason", "issue", "problem", "happened", "occurred"],
-        aiConfirm: ["understand", "got it", "clear", "thanks", "excellent", "great", "now", "next step", "step 2"]
-      },
-      2: {
-        // Step 2: User should identify stakeholders
-        keywords: ["team", "manager", "lead", "stakeholder", "person", "people", "department", "involved"],
-        aiConfirm: ["stakeholder", "identified", "good", "perfect", "excellent", "step 3", "next"]
-      },
-      3: {
-        // Step 3: User should define success criteria
-        keywords: ["success", "goal", "target", "metric", "measure", "achieve", "complete", "done", "when"],
-        aiConfirm: ["criteria", "success", "measurable", "clear", "perfect", "step 4", "next"]
-      },
-      4: {
-        // Step 4: User should provide action plan details
-        keywords: ["action", "plan", "timeline", "week", "day", "month", "task", "do", "implement", "start"],
-        aiConfirm: ["plan", "timeline", "action", "good", "excellent", "step 5", "next", "ready"]
-      },
-      5: {
-        // Step 5: User should report implementation progress
-        keywords: ["done", "completed", "finished", "implemented", "resolved", "fixed", "working", "progress"],
-        aiConfirm: ["great", "excellent", "resolved", "success", "complete", "finished", "congratulations"]
-      }
-    };
-    
-    const pattern = stepPatterns[stepNum];
-    if (!pattern) return false;
-    
-    // Check if user message contains relevant keywords for this step
-    const userHasRelevantContent = pattern.keywords.some(kw => userLower.includes(kw));
-    // Check if AI confirms step completion
-    const aiConfirmsCompletion = pattern.aiConfirm.some(kw => aiLower.includes(kw));
-    
-    // Step is complete if user provided relevant content AND AI acknowledged it
-    return userHasRelevantContent && aiConfirmsCompletion;
-  };
-
-  const handleRiskFileUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      const content = event.target.result;
-      const fileName = file.name;
-      const fileText = `[File Uploaded: ${fileName}]\n\nContent:\n${content}`;
-      sendRiskChatMessage(fileText);
-    };
-    reader.readAsText(file);
-  };
-
   const sendRiskChatMessage = async (userMessage) => {
     if (!riskMitigationChat || !userMessage.trim()) return;
     const newMessages = [...riskChatMessages, { role: "user", content: userMessage }];
     setRiskChatMessages(newMessages);
     setRiskChatLoading(true);
     try {
-      console.log("=== Risk Chat Message ===");
-      console.log("User message:", userMessage);
-      console.log("Current step:", currentStep);
-      console.log("Risk:", riskMitigationChat?.title);
-      // Build a more intelligent system prompt that includes conversation history context
-      const recentHistory = newMessages.slice(-6).map(m => `${m.role === "user" ? "User" : "Agent"}: ${m.content}`).join("\n");
-      const systemPrompt = `You are an expert risk mitigation specialist guiding the user STEP-BY-STEP through resolving this risk: ${riskMitigationChat.title}.
-      
-Current Status:
-- Likelihood: ${riskMitigationChat.likelihood}/5
-- Impact: ${riskMitigationChat.impact}/5
-- Risk Score: ${riskMitigationChat.risk_score}
-- Status: ${riskMitigationChat.status}
-- Current Step: ${currentStep}/5
-- Completed Steps: ${completedSteps.join(", ") || "None yet"}
-
-Step Definitions:
-1. STEP 1: Understand root cause - Ask clarifying questions about WHY this risk exists
-2. STEP 2: Identify stakeholders - WHO needs to be involved to mitigate this
-3. STEP 3: Define success criteria - WHAT does success look like (measurable)
-4. STEP 4: Create action plan - HOW and WHEN will you implement fixes
-5. STEP 5: Track implementation - REPORT progress and verify results
-
-Recent Conversation:
-${recentHistory}
-
-Your Rules:
-- ONLY focus on the CURRENT step (${currentStep}/5)
-- Do NOT skip steps or jump ahead
-- When the user provides relevant information for the current step, acknowledge it clearly
-- When they complete a step, explicitly say something like "Great! You've completed Step ${currentStep}. Now let's move to Step ${currentStep + 1}."
-- When they report actions/fixes, suggest score updates in format: "Suggested update: Likelihood: X/5, Impact: Y/5"
-- Be concise, specific, and actionable
-- If user input doesn't address the current step, guide them back to it`;
-      
+      const systemPrompt = `You are an expert risk mitigation specialist helping to refine the mitigation plan for this risk: ${riskMitigationChat.title}. Continue the conversation and help develop practical, actionable mitigation strategies. Keep responses focused on this specific risk.`;
       const thread = newMessages.map(m => ({
         role: m.role === "user" ? "user" : "ai",
         content: m.content
       }));
       const body = buildGeminiRequestBody(systemPrompt, thread, false);
-      console.log("Request body:", body);
       const { res, data } = await geminiGenerateWithModels(body);
-      console.log("Response status:", res?.status);
-      console.log("Response data:", data);
       if (!res?.ok) throw new Error("Failed to get response");
       const text = geminiResponseText(data);
-      console.log("AI Response text:", text);
-      
-      if (!text || !text.trim()) {
-        throw new Error("Empty response from AI");
-      }
-      
-      // Extract score suggestions
-      const likelihoodMatch = text.match(/Likelihood:\s*(\d+)/);
-      const impactMatch = text.match(/Impact:\s*(\d+)/);
-      if (likelihoodMatch || impactMatch) {
-        setSuggestedUpdates({
-          likelihood: likelihoodMatch ? parseInt(likelihoodMatch[1]) : null,
-          impact: impactMatch ? parseInt(impactMatch[1]) : null
-        });
-      }
-      
-      // Intelligently detect step completion based on conversation context
-      const stepCompleted = evaluateStepCompletion(userMessage, text, currentStep);
-      if (stepCompleted && currentStep < 5) {
-        setCurrentStep(currentStep + 1);
-        setCompletedSteps([...completedSteps, currentStep]);
-      }
-      
       const aiMsg = { role: "ai", content: text };
       const finalMessages = [...newMessages, aiMsg];
       setRiskChatMessages(finalMessages);
       
+      // Save history to project
       const updatedRisks = risks.map(r => r.id === riskMitigationChat.id ? { ...r, chatHistory: finalMessages } : r);
       onUpdate({ ...project, risks: updatedRisks });
     } catch (e) {
       console.error("Risk chat message error:", e);
-      const errorMsg = e?.message || "Error: Could not process your message. Please try again.";
-      const errorMessages = [...newMessages, { role: "ai", content: errorMsg }];
+      const errorMessages = [...newMessages, { role: "ai", content: "Error: Could not process your message." }];
       setRiskChatMessages(errorMessages);
       updateRisk(riskMitigationChat.id, { chatHistory: errorMessages });
     } finally {
@@ -3784,6 +3329,16 @@ Your Rules:
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+      } else if (format === 'ppt') {
+        // Proper PPTX export using a library would be better, but for now we'll provide a clear instruction
+        // and a better formatted slide deck that users can print to PDF then save as PPTX.
+        const pptHtml = buildPPTXHtml({ ...project, risks: [riskMitigationChat] }, t);
+        const win = window.open('', '_blank');
+        win.document.write(pptHtml);
+        win.document.close();
+        setTimeout(() => {
+          alert('To get a .pptx file: \n1. Press Cmd+P (Mac) or Ctrl+P (Windows) in the new tab\n2. Save as PDF\n3. Open the PDF and "Save as PowerPoint"');
+        }, 1000);
       }
     } catch (e) {
       console.error('Export failed:', e);
@@ -3980,182 +3535,65 @@ Your Rules:
       
       {riskMitigationChat && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
-          <div className="card fade-in" style={{ padding: 24, maxWidth: "90vw", width: "1400px", margin: 16, maxHeight: "90vh", display: "flex", flexDirection: "column" }}>
+          <div className="card fade-in" style={{ padding: 24, maxWidth: 600, width: "90%", margin: 16, maxHeight: "80vh", display: "flex", flexDirection: "column" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-              <div style={{ fontWeight: 700, fontSize: 18 }}>📋 Detailed Risk Report & Mitigation</div>
+              <div style={{ fontWeight: 700, fontSize: 16 }}>📋 Risk Mitigation</div>
               <button type="button" className="btn-ghost" onClick={closeRiskMitigationChat} style={{ padding: "4px 8px" }}>✕</button>
             </div>
-            
-            {/* Split Panel Layout */}
-            <div style={{ display: "flex", gap: 20, flex: 1, minHeight: 0 }}>
-              {/* Left Panel: Detailed Report */}
-              <div style={{ flex: "0 0 45%", display: "flex", flexDirection: "column", borderRight: "1px solid var(--ps-border-subtle)", paddingRight: 16, overflowY: "auto" }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: "var(--ps-text)", marginBottom: 12 }}>Risk Details</div>
-                <div style={{ fontSize: 13, color: "var(--ps-text-muted)", marginBottom: 4 }}><strong>Title:</strong></div>
-                <div style={{ fontSize: 14, color: "var(--ps-text)", marginBottom: 16, fontWeight: 600 }}>{riskMitigationChat.title}</div>
-                
-                <div style={{ fontSize: 13, color: "var(--ps-text-muted)", marginBottom: 4 }}><strong>Description:</strong></div>
-                <div style={{ fontSize: 13, color: "var(--ps-quote-text)", marginBottom: 16, lineHeight: 1.6 }}>{riskMitigationChat.description}</div>
-                
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
-                  <div>
-                    <div style={{ fontSize: 11, color: "var(--ps-text-muted)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>Likelihood</div>
-                    <div style={{ fontSize: 16, fontWeight: 700, color: "var(--ps-text)", fontFamily: "'DM Mono', monospace" }}>{parseFloat(riskMitigationChat.likelihood).toFixed(1)}/5</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 11, color: "var(--ps-text-muted)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>Impact</div>
-                    <div style={{ fontSize: 16, fontWeight: 700, color: "var(--ps-text)", fontFamily: "'DM Mono', monospace" }}>{parseFloat(riskMitigationChat.impact).toFixed(1)}/5</div>
+            <div style={{ fontSize: 13, color: "var(--ps-text-muted)", marginBottom: 12 }}><strong>{riskMitigationChat.title}</strong></div>
+            <div style={{ flex: 1, overflowY: "auto", marginBottom: 16, display: "flex", flexDirection: "column", gap: 12, padding: "8px 0" }}>
+              {riskChatMessages.map((msg, i) => (
+                <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
+                  <div style={{
+                    maxWidth: "80%",
+                    padding: "12px 16px",
+                    borderRadius: msg.role === "user" ? "12px 12px 2px 12px" : "12px 12px 12px 2px",
+                    background: msg.role === "user" ? "#5B5BFF" : "var(--ps-chat-ai-bg)",
+                    border: msg.role === "ai" ? "1px solid var(--ps-border-subtle)" : "none",
+                    fontSize: 13,
+                    lineHeight: 1.6,
+                    color: msg.role === "user" ? "#fff" : "var(--ps-text)",
+                    whiteSpace: "pre-wrap",
+                    wordBreak: "break-word"
+                  }}>
+                    {msg.content}
                   </div>
                 </div>
-                
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
-                  <div>
-                    <div style={{ fontSize: 11, color: "var(--ps-text-muted)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>Risk Score</div>
-                    <div style={{ fontSize: 16, fontWeight: 700, color: getRiskColor(riskMitigationChat.risk_score), fontFamily: "'DM Mono', monospace" }}>{parseFloat(riskMitigationChat.risk_score).toFixed(1)}</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 11, color: "var(--ps-text-muted)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>Status</div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: "var(--ps-text)" }}>{riskMitigationChat.status}</div>
-                  </div>
-                </div>
-                
-                <div style={{ fontSize: 13, color: "var(--ps-text-muted)", marginBottom: 4 }}><strong>Current Mitigation Plan:</strong></div>
-                <div style={{ fontSize: 13, color: "var(--ps-quote-text)", marginBottom: 16, lineHeight: 1.6, whiteSpace: "pre-wrap", padding: "12px", background: "var(--ps-panel)", borderRadius: 6, border: "1px solid var(--ps-border-subtle)" }}>
-                  {mitigationToDetailedSteps(riskMitigationChat.mitigation)}
-                </div>
-                
-                <div style={{ fontSize: 13, color: "var(--ps-text-muted)", marginBottom: 4 }}><strong>Step-by-Step Action Plan:</strong></div>
-                <div style={{ fontSize: 13, color: "var(--ps-quote-text)", lineHeight: 1.8, padding: "12px", background: "var(--ps-panel)", borderRadius: 6, border: "1px solid var(--ps-border-subtle)" }}>
-                  <ol style={{ marginLeft: 20, color: "var(--ps-text)" }}>
-                    <li>Understand the root cause of this risk</li>
-                    <li>Identify stakeholders who need to be involved</li>
-                    <li>Define measurable success criteria</li>
-                    <li>Create a timeline for mitigation activities</li>
-                    <li>Assign ownership and accountability</li>
-                    <li>Monitor progress and adjust as needed</li>
-                  </ol>
-                </div>
-              </div>
-              
-              {/* Right Panel: AI Risk Agent */}
-              <div style={{ flex: "0 0 55%", display: "flex", flexDirection: "column", minHeight: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: "var(--ps-text)", marginBottom: 12 }}>🤖 AI Risk Agent</div>
-                
-                {/* Chat Area - MAIN FOCUS */}
-                <div style={{ fontSize: 12, fontWeight: 600, color: "var(--ps-text-muted)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 6 }}>Live Conversation</div>
-                <div style={{ flex: 1, overflowY: "auto", marginBottom: 12, display: "flex", flexDirection: "column", gap: 10, padding: "12px", background: "var(--ps-panel)", borderRadius: 8, border: "1px solid var(--ps-border-subtle)", minHeight: "400px" }}>
-                  {translatedRiskMessages.map((msg, i) => (
-                    <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
-                      <div style={{
-                        maxWidth: "85%",
-                        padding: "10px 14px",
-                        borderRadius: msg.role === "user" ? "12px 12px 2px 12px" : "12px 12px 12px 2px",
-                        background: msg.role === "user" ? "#5B5BFF" : "var(--ps-chat-ai-bg)",
-                        border: msg.role === "ai" ? "1px solid var(--ps-border-subtle)" : "none",
-                        fontSize: 13,
-                        lineHeight: 1.5,
-                        color: msg.role === "user" ? "#fff" : "var(--ps-text)",
-                        whiteSpace: "pre-wrap",
-                        wordBreak: "break-word"
-                      }}>
-                        {msg.content}
-                      </div>
-                    </div>
-                  ))}
-                  {riskChatLoading && <div style={{ fontSize: 11, color: "var(--ps-text-muted)", fontStyle: "italic" }}>🤖 AI is thinking...</div>}
-                </div>
-                
-                {/* Input Area */}
-                <div style={{ display: "flex", gap: 8, marginBottom: 12, alignItems: "center" }}>
-                  <label style={{ cursor: "pointer", padding: "8px", borderRadius: "8px", background: "var(--ps-panel)", border: "1px solid var(--ps-border-subtle)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }} title="Upload file">
-                    <span style={{ fontSize: 18 }}>📎</span>
-                    <input type="file" style={{ display: "none" }} onChange={handleRiskFileUpload} accept=".txt,.md,.csv,.json" />
-                  </label>
-                      <input
-                        ref={riskChatInputRef}
-                        placeholder={t.typeMessage}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" && !e.shiftKey) {
-                            e.preventDefault();
-                            sendRiskChatMessage(e.target.value);
-                            e.target.value = "";
-                          }
-                        }}
-                        style={{ flex: 1 }}
-                      />
-                      <button
-                        className="btn-primary"
-                        onClick={() => {
-                          sendRiskChatMessage(riskChatInputRef.current.value);
-                          riskChatInputRef.current.value = "";
-                        }}
-                        disabled={riskChatLoading}
-                      >
-                        {t.send}
-                      </button>n>
-                </div>
-                
-                {/* Compact Progress & Roadmap */}
-                <div style={{ fontSize: 11, fontWeight: 600, color: "var(--ps-text-muted)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 6 }}>Progress</div>
-                <div style={{ padding: "8px 12px", background: "var(--ps-panel)", borderRadius: 6, border: "1px solid var(--ps-border-subtle)", fontSize: 11, marginBottom: 12 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                    <div style={{ width: "100%", height: 6, background: "#ccc", borderRadius: 3, overflow: "hidden" }}>
-                      <div style={{ width: `${(completedSteps.length / 5) * 100}%`, height: "100%", background: "#5B5BFF", transition: "width 0.3s ease" }}></div>
-                    </div>
-                    <div style={{ fontWeight: 600, whiteSpace: "nowrap" }}>Step {currentStep}/5</div>
-                  </div>
-                  <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-                    {[1, 2, 3, 4, 5].map(step => (
-                      <div key={step} style={{
-                        width: 24,
-                        height: 24,
-                        borderRadius: "50%",
-                        background: completedSteps.includes(step) ? "#22C55E" : currentStep === step ? "#5B5BFF" : "#ccc",
-                        color: "#fff",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: 10,
-                        fontWeight: 700,
-                        opacity: currentStep >= step || completedSteps.includes(step) ? 1 : 0.5
-                      }}>
-                        {completedSteps.includes(step) ? "✓" : step}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                
-                {/* Suggested Updates */}
-                {suggestedUpdates && (suggestedUpdates.likelihood || suggestedUpdates.impact) && (
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <button className="btn-primary" onClick={() => {
-                      if (suggestedUpdates.likelihood || suggestedUpdates.impact) {
-                        updateRisk(riskMitigationChat.id, {
-                          likelihood: suggestedUpdates.likelihood || riskMitigationChat.likelihood,
-                          impact: suggestedUpdates.impact || riskMitigationChat.impact,
-                          risk_score: ((suggestedUpdates.likelihood || riskMitigationChat.likelihood) * (suggestedUpdates.impact || riskMitigationChat.impact)) / 5
-                        });
-                        setSuggestedUpdates(null);
-                      }
-                    }} style={{ flex: 1, fontSize: 11, padding: "6px 10px" }}>
-                      Apply: L:{suggestedUpdates.likelihood || "?"} I:{suggestedUpdates.impact || "?"}
-                    </button>
-                  </div>
-                )}
-              </div>
+              ))}
+              {riskChatLoading && <div style={{ fontSize: 12, color: "var(--ps-text-muted)", fontStyle: "italic" }}>Thinking...</div>}
             </div>
-            
-            {/* Bottom Export & Action Bar */}
-            <div style={{ display: "flex", gap: 12, justifyContent: "flex-end", flexWrap: "wrap", marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--ps-border-subtle)" }}>
+            <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+              <input
+                type="text"
+                placeholder="Type your response..."
+                onKeyDown={e => {
+                  if (e.key === "Enter" && !riskChatLoading) {
+                    sendRiskChatMessage(e.target.value);
+                    e.target.value = "";
+                  }
+                }}
+                style={{ flex: 1 }}
+                disabled={riskChatLoading}
+              />
+              <button className="btn-primary" onClick={e => {
+                const input = e.target.parentElement.querySelector("input");
+                sendRiskChatMessage(input.value);
+                input.value = "";
+              }} disabled={riskChatLoading}>
+                Send
+              </button>
+            </div>
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", flexWrap: "wrap" }}>
               <select onChange={(e) => { if (e.target.value) exportRiskReport(e.target.value); e.target.value = ''; }} style={{ padding: "8px 12px", fontSize: 12, borderRadius: 6, border: "1px solid var(--ps-border-subtle)", background: "var(--ps-card-bg)", color: "var(--ps-text)" }}>
-                <option value="">📥 Export Report & Roadmap as...</option>
+                <option value="">📥 Export as...</option>
                 <option value="html">HTML</option>
                 <option value="pdf">PDF</option>
                 <option value="word">Word (.docx)</option>
-                <option value="pptx">PowerPoint (.pptx)</option>
+                <option value="ppt">PowerPoint</option>
+                <option value="image">Image (PNG/JPEG)</option>
               </select>
               <button className="btn-ghost" onClick={closeRiskMitigationChat} style={{ fontSize: 12, padding: "8px 12px" }}>
-                Close
+                Done
               </button>
             </div>
           </div>
@@ -4474,8 +3912,7 @@ function TeamView({ t, project, onUpdate }) {
       ? `${userBusinessName} has invited you to collaborate on "${project.name}" on PreShield.`
       : `You have been invited to collaborate on "${project.name}" on PreShield.`;
     const subject = `You're invited to "${project.name}" on PreShield`;
-    const projectUrl = window.location.href.split("?")[0];
-    const body = `Hi,\n\n${businessLine}\n\nProject: ${project.name}\nURL: ${projectUrl}\n\nClick here to join:\n{{joinUrl}}\n\nBest regards,\nPreShield Team`;
+    const body = `Hi,\n\n${businessLine}\n\nClick here to join:\n{{joinUrl}}\n`;
     setEmailSubjectDraft(subject);
     setEmailBodyDraft(body);
     setEmailSubjectSaved(subject);
@@ -4532,67 +3969,23 @@ function TeamView({ t, project, onUpdate }) {
   const submitInviteByEmail = async () => {
     const trimmed = inviteEmail.trim().toLowerCase();
     if (!trimmed) return;
-    
-    // Invitation rules: cannot invite self
-    const stored = localStorage.getItem("ps_session") || sessionStorage.getItem("ps_session");
-    let currentUserEmail = "";
-    try {
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        currentUserEmail = parsed?.user?.email?.toLowerCase() || "";
-      }
-    } catch (e) {}
-    
-    if (trimmed === currentUserEmail) {
-      setError("You cannot invite yourself to your own project.");
-      setInviting(false);
-      return;
-    }
-
     setInviting(true);
     setError(null);
     try {
-      // Validate email format
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(trimmed)) {
-        setError("Please enter a valid email address.");
-        setInviting(false);
-        return;
-      }
-      
-      // Ensure project URL is included in the email body
-      const projectUrl = window.location.href.split("?")[0];
-      let finalEmailBody = emailBodyDraft;
-      if (!finalEmailBody.includes(projectUrl)) {
-        finalEmailBody = finalEmailBody.replace(
-          "{{joinUrl}}",
-          `${projectUrl}\n\nProject URL: ${projectUrl}`
-        );
-      }
-      
       await sb.createInviteByEmail(
         project.id,
         project.name,
         trimmed,
-        { business_name: userBusinessName, business_location: userBusinessLocation },
+        { business_name: userBusinessName, business_location: userBusinessLocation }
+        ,
         emailSubjectDraft,
-        finalEmailBody
+        emailBodyDraft
       );
       setShowInviteDialog(false);
       setInviteEmail("");
       await load();
     } catch (e) {
-      console.error("Invite error:", e);
-      // Provide more specific error messages
-      if (e?.message?.includes("Failed to fetch") || e?.message?.includes("NetworkError")) {
-        setError("Network error: Could not reach the server. Please check your connection and try again.");
-      } else if (e?.message?.includes("401") || e?.message?.includes("403")) {
-        setError("Permission denied: You don't have permission to send invites.");
-      } else if (e?.message?.includes("400")) {
-        setError("Invalid request: Please check the email address and try again.");
-      } else {
-        setError(e?.message || "Failed to send invite. Please try again.");
-      }
+      setError(e?.message || "Failed to send invite. Try again.");
     } finally {
       setInviting(false);
     }
@@ -4649,7 +4042,7 @@ function TeamView({ t, project, onUpdate }) {
               <div style={{ fontWeight: 700, fontSize: 16 }}>{t.inviteByEmailTitle || "Invite by Email"}</div>
             </div>
             <div style={{ fontSize: 13, color: "var(--ps-text-muted)", marginBottom: 12, lineHeight: 1.5 }}>
-              {t.inviteEmailIntro || "We will send an invite email to the address below (using your app's no-reply sender). The email includes your business name, the project name, and the project URL."}
+              {t.inviteEmailIntro || "We will send an invite email to the address below (using your app’s no-reply sender). The email includes your business name and the project name."}
             </div>
             <div style={{ marginBottom: 14 }}>
               <label style={{ fontSize: 12, color: "var(--ps-text-muted)", display: "block", marginBottom: 6 }}>{t.teammateEmailLabel || "Teammate email"}</label>
