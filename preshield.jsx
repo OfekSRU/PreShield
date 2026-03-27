@@ -2724,18 +2724,9 @@ function ExportModal({ project, t, onClose }) {
       } else if (format === "pptx") {
         const html = buildPPTXHtml(project, t);
         download(html, `PreShield_${filename}_deck.html`, "text/html");
-      } else if (format === "jpeg") {
-        const html = buildReportHTML(project, t);
-        const blob = new Blob([html], { type: "text/html" });
-        const url = URL.createObjectURL(blob);
-        const win = window.open(url, "_blank");
-        setTimeout(() => { URL.revokeObjectURL(url); }, 3000);
-        // Show instruction for JPEG
-        setExporting("jpeg-tip");
-        return;
       }
     } finally {
-      if (format !== "jpeg") setExporting(null);
+      setExporting(null);
     }
   };
 
@@ -2752,7 +2743,6 @@ function ExportModal({ project, t, onClose }) {
     { id: "word", icon: "📝", label: "Word (.doc)", desc: "Opens in Microsoft Word or Google Docs" },
     { id: "html", icon: "🌐", label: "HTML", desc: "Download as HTML file" },
     { id: "pptx", icon: "📊", label: "Presentation", desc: "16:9 slide deck — open & print to PPTX" },
-    { id: "jpeg", icon: "🖼️", label: "JPEG / Image", desc: "Opens report — use browser screenshot" },
   ];
 
   return (
@@ -2762,28 +2752,19 @@ function ExportModal({ project, t, onClose }) {
           <div style={{ fontWeight: 600, fontSize: 16, color: "var(--ps-text)" }}>Export Report</div>
           <button onClick={onClose} style={{ background: "none", border: "none", color: "var(--ps-text-muted)", fontSize: 18, cursor: "pointer", padding: "0 4px" }}>✕</button>
         </div>
-        {exporting === "jpeg-tip" ? (
-          <div style={{ textAlign: "center", padding: "12px 0" }}>
-            <div style={{ fontSize: 32, marginBottom: 12 }}>🖼️</div>
-            <div style={{ fontSize: 14, color: "var(--ps-text)", marginBottom: 8 }}>Report opened in new tab</div>
-            <div style={{ fontSize: 13, color: "var(--ps-text-muted)", marginBottom: 20 }}>Use your browser's screenshot tool or <strong>Cmd+Shift+4</strong> (Mac) / <strong>Windows+Shift+S</strong> to capture as JPEG.</div>
-            <button className="btn-primary" style={{ width: "100%" }} onClick={() => setExporting(null)}>Back</button>
-          </div>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {formats.map(f => (
-              <button key={f.id} onClick={() => doExport(f.id)} disabled={!!exporting} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 16px", background: exporting === f.id ? "#5B5BFF22" : "var(--ps-panel)", border: "1px solid var(--ps-border-subtle)", borderRadius: 10, cursor: "pointer", textAlign: "left", transition: "all 0.15s", opacity: exporting && exporting !== f.id ? 0.5 : 1 }}>
-                <span style={{ fontSize: 22, flexShrink: 0 }}>{f.icon}</span>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 500, color: "var(--ps-text)" }}>{f.label}</div>
-                  <div style={{ fontSize: 11, color: "var(--ps-text-muted)", marginTop: 1 }}>{f.desc}</div>
-                </div>
-                {exporting === f.id && <span style={{ fontSize: 12, color: "#5B5BFF" }}>...</span>}
-                {!exporting && <span style={{ color: "var(--ps-text-muted)", fontSize: 14 }}>↓</span>}
-              </button>
-            ))}
-          </div>
-        )}
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {formats.map(f => (
+            <button key={f.id} onClick={() => doExport(f.id)} disabled={!!exporting} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 16px", background: exporting === f.id ? "#5B5BFF22" : "var(--ps-panel)", border: "1px solid var(--ps-border-subtle)", borderRadius: 10, cursor: "pointer", textAlign: "left", transition: "all 0.15s", opacity: exporting && exporting !== f.id ? 0.5 : 1 }}>
+              <span style={{ fontSize: 22, flexShrink: 0 }}>{f.icon}</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 14, fontWeight: 500, color: "var(--ps-text)" }}>{f.label}</div>
+                <div style={{ fontSize: 11, color: "var(--ps-text-muted)", marginTop: 1 }}>{f.desc}</div>
+              </div>
+              {exporting === f.id && <span style={{ fontSize: 12, color: "#5B5BFF" }}>...</span>}
+              {!exporting && <span style={{ color: "var(--ps-text-muted)", fontSize: 14 }}>↓</span>}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
