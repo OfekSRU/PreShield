@@ -2914,11 +2914,53 @@ function InterviewView({ t, project, onUpdate, lang }) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [startError, setStartError] = useState(null);
+  const [displayMessages, setDisplayMessages] = useState([]);
+  const [translatingLang, setTranslatingLang] = useState(null);
+  const lastLangRef = useRef(lang);
   const messagesEndRef = useRef(null);
   const allMessages = project.messages || [];
   const messages = allMessages.filter((m) => (m?.channel || "interview") === "interview");
 
-  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+  // Translate all past messages when language changes
+  useEffect(() => {
+    if (lastLangRef.current !== lang && messages.length > 0) {
+      setTranslatingLang(lang);
+      const translateHistory = async () => {
+        try {
+          const targetLangName = lang === "he" ? "Hebrew" : lang === "es" ? "Spanish" : lang === "fr" ? "French" : lang === "de" ? "German" : "English";
+          const historyText = messages.map((m, i) => `[${i}] ${m.role === 'user' ? 'User' : 'AI'}: ${m.content}`).join('\n\n');
+          const prompt = `Translate the following interview conversation into ${targetLangName}. Keep the same format [index] Role: Content. Preserve all [index] markers and do not add any extra commentary.\n\n${historyText}`;
+          
+          const { res, data } = await geminiGenerateWithModels(buildGeminiRequestBody(prompt, [], false));
+          if (res?.ok) {
+            const translatedText = geminiResponseText(data);
+            const translatedMessages = messages.map((m) => {
+              const regex = new RegExp(`\\[${messages.indexOf(m)}\\]\\s+(?:User|AI):\\s*(.+?)(?=\\n\\[|$)`, 's');
+              const match = translatedText.match(regex);
+              if (match && match[1]) {
+                return { ...m, content: match[1].trim() };
+              }
+              return m;
+            });
+            setDisplayMessages(translatedMessages);
+            lastLangRef.current = lang;
+          }
+        } catch (e) {
+          console.error("Translation failed:", e);
+          setDisplayMessages(messages);
+        } finally {
+          setTranslatingLang(null);
+        }
+      };
+      translateHistory();
+    } else if (messages.length > 0 && displayMessages.length === 0) {
+      setDisplayMessages(messages);
+    } else if (lang === lastLangRef.current && messages.length > 0) {
+      setDisplayMessages(messages);
+    }
+  }, [lang, messages]);
+
+  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [displayMessages]);
 
   const systemPrompt = `You are PreShield, an expert AI facilitator conducting a pre-mortem risk assessment interview. Your goal is to uncover hidden risks before the project starts.
 
@@ -3067,7 +3109,7 @@ If this is the first message, introduce yourself briefly and ask your first ques
         {project.status === "completed" && !project.report_generated && <div style={{ fontSize: 12, color: "#1D9E75", marginLeft: "auto", fontWeight: 600 }}>✓ {t.statusCompleted}</div>}
       </div>
       <div style={{ flex: 1, overflowY: "auto", padding: "4px 0", display: "flex", flexDirection: "column", gap: 12 }}>
-        {messages.map((m, i) => (
+        {(displayMessages.length > 0 ? displayMessages : messages).map((m, i) => (
           <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}>
             <div style={{
               maxWidth: "72%",
