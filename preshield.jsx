@@ -2212,7 +2212,7 @@ function DashboardView({ t, projects, onSelect, onNew, onDelete }) {
               <div style={{ fontSize: 11, color: "#9A9898", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.5px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {m.label}
               </div>
-              <div style={{ fontSize: 26, fontWeight: 700, fontFamily: "'DM Mono', monospace", lineHeight: 1 }}>{m.value}</div>
+              <div style={{ fontSize: 26, fontWeight: 400, fontFamily: "'DM Sans', sans-serif", lineHeight: 1 }}>{m.value}</div>
               {m.sub ? <div style={{ fontSize: 12, color: "#9A9898", marginTop: 4 }}>{m.sub}</div> : null}
             </div>
             <div style={{ width: 34, height: 34, borderRadius: 10, background: "#F0F1FF", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 16 }}>
@@ -2289,7 +2289,7 @@ function DashboardView({ t, projects, onSelect, onNew, onDelete }) {
                       {p.name}
                     </div>
                     <div style={{ fontSize: 12, color: "#9A9898", marginTop: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {t.projectTypes?.[p.project_type] || p.project_type?.replace(/_/g, " ")}
+                      {p.business_name ? `${p.business_name} • ` : ""}{t.projectTypes?.[p.project_type] || p.project_type?.replace(/_/g, " ")}
                     </div>
                   </div>
                   <span
