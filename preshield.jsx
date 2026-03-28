@@ -2028,7 +2028,7 @@ function PreShieldApp({ session, onSignOut }) {
               {session?.user?.email?.[0]?.toUpperCase() || "?"}
             </div>
             {showUserMenu && (
-              <div style={{ position: "absolute", right: 0, top: 38, background: "var(--ps-menu-bg)", border: "1px solid var(--ps-menu-border)", borderRadius: 10, padding: 8, minWidth: 200, zIndex: 200, boxShadow: colorMode === "light" ? "0 8px 24px rgba(0,0,0,.1)" : "none" }}>
+              <div style={{ position: "absolute", right: lang === "he" ? "auto" : 0, left: lang === "he" ? 0 : "auto", top: 38, background: "var(--ps-menu-bg)", border: "1px solid var(--ps-menu-border)", borderRadius: 10, padding: 8, minWidth: 200, zIndex: 200, boxShadow: colorMode === "light" ? "0 8px 24px rgba(0,0,0,.1)" : "none", maxWidth: "calc(100vw - 20px)" }}>
                 <div style={{ fontSize: 12, color: "var(--ps-text-muted)", padding: "6px 10px", borderBottom: "1px solid var(--ps-menu-divider)", marginBottom: 6, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{session?.user?.email}</div>
                 <button onClick={() => { setShowUserMenu(false); onSignOut(); }} style={{ display: "block", width: "100%", textAlign: "left", padding: "7px 10px", fontSize: 13, color: "#E24B4A", background: "none", border: "none", cursor: "pointer", borderRadius: 6 }}>
                   Sign out
