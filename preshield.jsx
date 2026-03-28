@@ -3913,6 +3913,25 @@ function TeamView({ t, project, onUpdate }) {
   const submitInviteByEmail = async () => {
     const trimmed = inviteEmail.trim().toLowerCase();
     if (!trimmed) return;
+    
+    // Get current user email from session
+    const userEmail = (() => {
+      try {
+        const stored = localStorage.getItem("ps_session") || sessionStorage.getItem("ps_session");
+        if (!stored) return null;
+        const parsed = JSON.parse(stored);
+        return parsed?.user?.email?.toLowerCase();
+      } catch {
+        return null;
+      }
+    })();
+    
+    // Prevent self-invite
+    if (userEmail && trimmed === userEmail) {
+      setError("You cannot invite yourself to this project.");
+      return;
+    }
+    
     setInviting(true);
     setError(null);
     try {
