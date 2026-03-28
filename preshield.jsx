@@ -2289,7 +2289,7 @@ function DashboardView({ t, projects, onSelect, onNew, onDelete }) {
                       {p.name}
                     </div>
                     <div style={{ fontSize: 12, color: "#9A9898", marginTop: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {t.projectTypes?.[p.project_type] || p.project_type?.replace(/_/g, " ")}
+                      {p.business_name ? `${p.business_name} • ` : ""}{t.projectTypes?.[p.project_type] || p.project_type?.replace(/_/g, " ")}
                     </div>
                   </div>
                   <span
@@ -3969,6 +3969,24 @@ function TeamView({ t, project, onUpdate }) {
   const submitInviteByEmail = async () => {
     const trimmed = inviteEmail.trim().toLowerCase();
     if (!trimmed) return;
+    
+    // Prevent self-invite
+    const userEmail = (() => {
+      try {
+        const stored = localStorage.getItem("ps_session") || sessionStorage.getItem("ps_session");
+        if (!stored) return null;
+        const parsed = JSON.parse(stored);
+        return parsed?.user?.email?.toLowerCase();
+      } catch {
+        return null;
+      }
+    })();
+    
+    if (userEmail && trimmed === userEmail) {
+      setError("You cannot invite yourself to this project.");
+      return;
+    }
+    
     setInviting(true);
     setError(null);
     try {
